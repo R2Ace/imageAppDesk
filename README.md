@@ -77,4 +77,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Support
 
-If you encounter any issues or need assistance, please open an issue on the repository. 
+If you encounter any issues or need assistance, please open an issue on the repository.
