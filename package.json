@@ -1,0 +1,49 @@
+{
+  "name": "image-batch-processor",
+  "productName": "Image Batch Processor",
+  "version": "1.0.0",
+  "description": "A desktop app to resize, convert, and optimize images in batch",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "nodemon --exec electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win"
+  },
+  "keywords": [
+    "electron",
+    "image",
+    "processing",
+    "sharp",
+    "resize",
+    "converter"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "electron": "^36.2.0",
+    "electron-builder": "^26.0.12",
+    "electron-store": "^8.1.0",
+    "sharp": "^0.34.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.10"
+  },
+  "build": {
+    "appId": "com.r2ace.imagebatchprocessor",
+    "productName": "Image Batch Processor",
+    "mac": {
+      "category": "public.app-category.graphics-design"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "**/*",
+      "!.git{,/**}"
+    ]
+  }
+}
