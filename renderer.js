@@ -66,6 +66,9 @@ function updateUIFromSettings() {
   
   // Set strip metadata checkbox
   stripMetadataCheckbox.checked = settings.stripMetadata;
+  
+  // Update format-dependent UI
+  handleFormatChange();
 }
 
 // Set up all event listeners
@@ -101,6 +104,9 @@ function setupEventListeners() {
   
   // Setup progress update listener
   window.electronAPI.onProcessProgress(handleProgressUpdate);
+  
+  // Format change
+  formatSelect.addEventListener('change', handleFormatChange);
 }
 
 // Handle file drag over
@@ -146,13 +152,23 @@ function handleFileSelect() {
 
 // Process selected files
 function handleFiles(fileList) {
+  const supportedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.tiff', '.tif', '.gif', '.svg', '.heif'];
+  
   const newFiles = Array.from(fileList).filter(file => {
     const fileType = file.type.toLowerCase();
-    return fileType.includes('image') || file.name.toLowerCase().endsWith('.heic');
+    const fileName = file.name.toLowerCase();
+    
+    // Check by MIME type
+    if (fileType.includes('image')) {
+      return true;
+    }
+    
+    // If MIME type is not detected, check by extension
+    return supportedExtensions.some(ext => fileName.endsWith(ext));
   });
   
   if (newFiles.length === 0) {
-    alert('Please select valid image files (JPG, PNG, WebP, HEIC)');
+    alert('Please select valid image files (JPG, PNG, WebP, HEIC, TIFF, GIF, SVG, HEIF)');
     return;
   }
   
@@ -394,6 +410,25 @@ async function handleOpenFolder() {
   if (outputDirInput.value) {
     await window.electronAPI.openFolder(outputDirInput.value);
   }
+}
+
+// Handle format change
+function handleFormatChange() {
+  const format = formatSelect.value;
+  
+  // Find the quality setting container
+  const qualityContainer = document.querySelector('.setting-group .range-container').closest('.setting-group');
+  
+  // GIF doesn't support quality settings in the same way as other formats
+  if (format === 'gif') {
+    qualityContainer.classList.add('disabled');
+    qualityInput.disabled = true;
+  } else {
+    qualityContainer.classList.remove('disabled');
+    qualityInput.disabled = false;
+  }
+  
+  updateSettingsFromUI();
 }
 
 // Initialize the app

@@ -143,6 +143,15 @@ app.whenReady().then(() => {
         } else if (settings.format === 'webp') {
           formatOptions = { quality: parseInt(settings.quality) };
           sharpInstance = sharpInstance.webp(formatOptions);
+        } else if (settings.format === 'tiff') {
+          formatOptions = { quality: parseInt(settings.quality) };
+          sharpInstance = sharpInstance.tiff(formatOptions);
+        } else if (settings.format === 'gif') {
+          // GIF doesn't support quality settings in the same way
+          sharpInstance = sharpInstance.gif();
+        } else if (settings.format === 'heif') {
+          formatOptions = { quality: parseInt(settings.quality) };
+          sharpInstance = sharpInstance.heif(formatOptions);
         }
 
         // Process the image

@@ -523,4 +523,9 @@ input[type="range"]::-moz-range-thumb {
   .btn {
     padding: 0.7rem 1.2rem;
   }
+}
+
+.setting-group.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 } 
