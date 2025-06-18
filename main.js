@@ -8,13 +8,15 @@ const Store = require('electron-store');
 const store = new Store({
   defaults: {
     outputDir: app.getPath('pictures'),
-    lastUsedSettings: {
-      width: 800,
-      resizeType: 'width', // 'width', 'percentage'
-      percentage: 50,
-      format: 'jpg',
+    settings: {
+      format: 'jpeg',
       quality: 80,
-      stripMetadata: true
+      preset: 'custom', // 'custom', '1080p', '720p', '480p'
+      customWidth: 1920,
+      customHeight: 1080,
+      stripMetadata: true,
+      autoOpenOutput: true,
+      overwriteFiles: false
     }
   }
 });
@@ -23,75 +25,105 @@ let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-    },
+    width: 800,
+    height: 600,
+    minWidth: 600,
+    minHeight: 400,
     titleBarStyle: 'hiddenInset',
-    icon: path.join(__dirname, 'assets/icon.png')
+    backgroundColor: '#f8fafc',
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
   });
 
   mainWindow.loadFile('index.html');
 
-  // Open DevTools in development
   if (process.env.NODE_ENV === 'development') {
     mainWindow.webContents.openDevTools();
   }
 }
 
+// Get dimensions based on preset
+function getPresetDimensions(preset) {
+  const presets = {
+    '1080p': { width: 1920, height: 1080 },
+    '720p': { width: 1280, height: 720 },
+    '480p': { width: 854, height: 480 }
+  };
+  return presets[preset] || null;
+}
+
+// Generate unique filename if file exists and overwrite is false
+function getUniqueFilename(outputPath, overwrite = false) {
+  if (overwrite || !fs.existsSync(outputPath)) {
+    return outputPath;
+  }
+  
+  const parsed = path.parse(outputPath);
+  let counter = 1;
+  let newPath;
+  
+  do {
+    const suffix = ` (${counter})`;
+    newPath = path.join(parsed.dir, `${parsed.name}${suffix}${parsed.ext}`);
+    counter++;
+  } while (fs.existsSync(newPath));
+  
+  return newPath;
+}
+
 app.whenReady().then(() => {
   createWindow();
 
-  app.on('activate', function () {
+  app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 
-  // Handle settings loading
-  ipcMain.handle('get-settings', async () => {
-    return {
-      outputDir: store.get('outputDir'),
-      lastUsedSettings: store.get('lastUsedSettings')
-    };
+  // Handle settings
+  ipcMain.handle('get-settings', () => store.get('settings'));
+  ipcMain.handle('save-settings', (_, settings) => {
+    store.set('settings', settings);
+    return true;
   });
 
-  // Handle settings update
-  ipcMain.handle('save-settings', async (_, settings) => {
-    if (settings.outputDir) {
-      store.set('outputDir', settings.outputDir);
-    }
-    if (settings.lastUsedSettings) {
-      store.set('lastUsedSettings', settings.lastUsedSettings);
-    }
+  // Handle output directory
+  ipcMain.handle('get-output-dir', () => store.get('outputDir'));
+  ipcMain.handle('set-output-dir', (_, dir) => {
+    store.set('outputDir', dir);
     return true;
   });
 
   // Handle output directory selection
   ipcMain.handle('select-output-dir', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openDirectory'],
-      title: 'Select Output Directory'
+      properties: ['openDirectory']
     });
-
+    
     if (!result.canceled) {
-      const dir = result.filePaths[0];
-      store.set('outputDir', dir);
-      return dir;
+      const selectedDir = result.filePaths[0];
+      store.set('outputDir', selectedDir);
+      return selectedDir;
     }
     return null;
   });
 
+  // Handle opening folders
+  ipcMain.handle('open-folder', async (_, folderPath) => {
+    try {
+      await shell.openPath(folderPath);
+      return true;
+    } catch (error) {
+      console.error('Error opening folder:', error);
+      return false;
+    }
+  });
+
   // Handle image processing
   ipcMain.handle('process-images', async (_, { files, settings }) => {
-    // Save the settings for next time
-    store.set('lastUsedSettings', settings);
-
     const outputDir = store.get('outputDir');
     const results = [];
 
-    // Ensure the output directory exists
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
@@ -99,59 +131,58 @@ app.whenReady().then(() => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
-        // Convert array back to Buffer for Sharp
         const buffer = Buffer.from(file.buffer);
-        
-        // Get file info
         const filename = file.name;
         const fileInfo = path.parse(filename);
         const outputFilename = `${fileInfo.name}.${settings.format}`;
-        const outputPath = path.join(outputDir, outputFilename);
+        let outputPath = path.join(outputDir, outputFilename);
+        
+        // Handle file conflicts
+        outputPath = getUniqueFilename(outputPath, settings.overwriteFiles);
 
-        // Process with Sharp
-        let sharpInstance = sharp(buffer);
+        let sharpInstance = sharp(buffer, { limitInputPixels: false });
 
         // Strip metadata if requested
         if (settings.stripMetadata) {
           sharpInstance = sharpInstance.withMetadata(false);
         }
 
-        // Resize image based on settings
-        if (settings.resizeType === 'width' && settings.width > 0) {
+        // Get dimensions based on preset or custom
+        let dimensions;
+        if (settings.preset === 'custom') {
+          dimensions = {
+            width: settings.customWidth,
+            height: settings.customHeight
+          };
+        } else {
+          dimensions = getPresetDimensions(settings.preset);
+        }
+
+        // Resize image
+        if (dimensions) {
           sharpInstance = sharpInstance.resize({
-            width: parseInt(settings.width),
-            withoutEnlargement: true
-          });
-        } else if (settings.resizeType === 'percentage' && settings.percentage > 0) {
-          // For percentage resize, we need to get original dimensions first
-          const metadata = await sharp(buffer).metadata();
-          const newWidth = Math.round((metadata.width * settings.percentage) / 100);
-          sharpInstance = sharpInstance.resize({
-            width: newWidth,
+            width: dimensions.width,
+            height: dimensions.height,
+            fit: 'inside',
             withoutEnlargement: true
           });
         }
 
         // Set output format and quality
-        let formatOptions = {};
-        if (settings.format === 'jpg' || settings.format === 'jpeg') {
-          formatOptions = { quality: parseInt(settings.quality) };
-          sharpInstance = sharpInstance.jpeg(formatOptions);
-        } else if (settings.format === 'png') {
-          formatOptions = { compressionLevel: Math.floor((100 - parseInt(settings.quality)) / 10) };
-          sharpInstance = sharpInstance.png(formatOptions);
-        } else if (settings.format === 'webp') {
-          formatOptions = { quality: parseInt(settings.quality) };
-          sharpInstance = sharpInstance.webp(formatOptions);
-        } else if (settings.format === 'tiff') {
-          formatOptions = { quality: parseInt(settings.quality) };
-          sharpInstance = sharpInstance.tiff(formatOptions);
-        } else if (settings.format === 'gif') {
-          // GIF doesn't support quality settings in the same way
-          sharpInstance = sharpInstance.gif();
-        } else if (settings.format === 'heif') {
-          formatOptions = { quality: parseInt(settings.quality) };
-          sharpInstance = sharpInstance.heif(formatOptions);
+        const formatOptions = { quality: settings.quality };
+        
+        switch (settings.format) {
+          case 'jpeg':
+            sharpInstance = sharpInstance.jpeg(formatOptions);
+            break;
+          case 'png':
+            sharpInstance = sharpInstance.png({
+              compressionLevel: Math.floor((100 - settings.quality) / 10)
+            });
+            break;
+          case 'webp':
+            sharpInstance = sharpInstance.webp(formatOptions);
+            break;
         }
 
         // Process the image
@@ -170,36 +201,30 @@ app.whenReady().then(() => {
           savingsPercent,
           outputPath
         });
+
+        // Send progress update
+        mainWindow.webContents.send('process-progress', {
+          current: i + 1,
+          total: files.length,
+          file: filename
+        });
+
       } catch (error) {
-        console.error(`Error processing ${file.name}:`, error);
+        console.error('Error processing file:', error);
         results.push({
           name: file.name,
           success: false,
           error: error.message
         });
       }
-
-      // Send progress update
-      mainWindow.webContents.send('process-progress', {
-        current: i + 1,
-        total: files.length,
-        file: file.name
-      });
     }
 
     return results;
   });
-
-  // Handle folder opening
-  ipcMain.handle('open-folder', async (_, folderPath) => {
-    if (folderPath) {
-      await shell.openPath(folderPath);
-      return true;
-    }
-    return false;
-  });
 });
 
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit();
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 }); 

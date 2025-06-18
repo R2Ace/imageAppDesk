@@ -1,435 +1,453 @@
+const { ipcRenderer } = require('electron');
+
 // DOM Elements
 const dropZone = document.getElementById('dropZone');
-const fileList = document.getElementById('fileList');
-const selectFilesBtn = document.getElementById('selectFilesBtn');
-const outputDirBtn = document.getElementById('outputDirBtn');
-const outputDirInput = document.getElementById('outputDir');
-const processBtn = document.getElementById('processBtn');
-const clearBtn = document.getElementById('clearBtn');
-const progressOverlay = document.getElementById('progressOverlay');
-const progressBar = document.getElementById('progressBar');
-const progressText = document.getElementById('progressText');
-const currentFileText = document.getElementById('currentFileText');
-const resultsOverlay = document.getElementById('resultsOverlay');
-const resultsList = document.getElementById('resultsList');
-const processedCount = document.getElementById('processedCount');
-const successCount = document.getElementById('successCount');
-const errorCount = document.getElementById('errorCount');
-const totalSaved = document.getElementById('totalSaved');
-const openFolderBtn = document.getElementById('openFolderBtn');
-const closeResultsBtn = document.getElementById('closeResultsBtn');
-const widthSetting = document.getElementById('widthSetting');
-const percentageSetting = document.getElementById('percentageSetting');
-const widthInput = document.getElementById('width');
-const percentageInput = document.getElementById('percentage');
-const formatSelect = document.getElementById('format');
-const qualityInput = document.getElementById('quality');
+const fileInput = document.getElementById('fileInput');
+const formatButtons = document.querySelectorAll('.format-btn');
+const sizeButtons = document.querySelectorAll('.size-btn');
+const qualitySlider = document.getElementById('qualitySlider');
 const qualityValue = document.getElementById('qualityValue');
-const stripMetadataCheckbox = document.getElementById('stripMetadata');
-const resizeTypeRadios = document.querySelectorAll('input[name="resizeType"]');
+const customWidth = document.getElementById('customWidth');
+const customHeight = document.getElementById('customHeight');
+const customSizeGroup = document.getElementById('customSizeGroup');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsModal = document.getElementById('settingsModal');
+const closeSettings = document.getElementById('closeSettings');
+const processingState = document.getElementById('processingState');
+const progressFill = document.getElementById('progressFill');
+const currentFile = document.getElementById('currentFile');
+const processedCount = document.getElementById('processedCount');
+const totalCount = document.getElementById('totalCount');
+const resultsDashboard = document.getElementById('resultsDashboard');
+const resultsList = document.getElementById('resultsList');
+const successCount = document.getElementById('successCount');
+const spaceSaved = document.getElementById('spaceSaved');
+const avgReduction = document.getElementById('avgReduction');
+const processTime = document.getElementById('processTime');
+const openFolderBtn = document.getElementById('openFolderBtn');
+const processMoreBtn = document.getElementById('processMoreBtn');
+const newConversionBtn = document.getElementById('newConversionBtn');
 
-// State variables
-let selectedFiles = [];
-let settings = {};
+// Modal elements
+const stripMetadata = document.getElementById('stripMetadata');
+const autoOpenOutput = document.getElementById('autoOpenOutput');
+const overwriteFiles = document.getElementById('overwriteFiles');
+const outputPath = document.getElementById('outputPath');
+const selectOutputDir = document.getElementById('selectOutputDir');
+const defaultFormat = document.getElementById('defaultFormat');
+const defaultResolution = document.getElementById('defaultResolution');
+const saveSettings = document.getElementById('saveSettings');
+const resetSettings = document.getElementById('resetSettings');
 
-// Initialize the app
-async function initApp() {
-  // Load settings
-  const storedSettings = await window.electronAPI.getSettings();
-  settings = storedSettings.lastUsedSettings;
-  outputDirInput.value = storedSettings.outputDir;
-  
-  // Apply settings to UI
-  updateUIFromSettings();
-  
-  // Set up event listeners
-  setupEventListeners();
+// State
+let settings = {
+    format: 'jpeg',
+    quality: 80,
+    preset: 'custom',
+    customWidth: 1920,
+    customHeight: 1080,
+    stripMetadata: true,
+    autoOpenOutput: true,
+    overwriteFiles: false,
+    outputDir: ''
+};
+
+let processStartTime = 0;
+
+// Initialize
+async function init() {
+    await loadSettings();
+    updateUI();
+    setupEventListeners();
 }
 
-// Update UI elements from settings
-function updateUIFromSettings() {
-  // Set resize method
-  document.querySelector(`input[name="resizeType"][value="${settings.resizeType}"]`).checked = true;
-  toggleResizeSettings();
-  
-  // Set width and percentage values
-  widthInput.value = settings.width;
-  percentageInput.value = settings.percentage;
-  
-  // Set format
-  formatSelect.value = settings.format;
-  
-  // Set quality
-  qualityInput.value = settings.quality;
-  qualityValue.textContent = `${settings.quality}%`;
-  updateQualitySlider();
-  
-  // Set strip metadata checkbox
-  stripMetadataCheckbox.checked = settings.stripMetadata;
-  
-  // Update format-dependent UI
-  handleFormatChange();
-}
-
-// Set up all event listeners
-function setupEventListeners() {
-  // Drag and drop events
-  dropZone.addEventListener('dragover', handleDragOver);
-  dropZone.addEventListener('dragleave', handleDragLeave);
-  dropZone.addEventListener('drop', handleDrop);
-  
-  // Button click events
-  selectFilesBtn.addEventListener('click', handleFileSelect);
-  outputDirBtn.addEventListener('click', handleOutputDirSelect);
-  processBtn.addEventListener('click', handleProcess);
-  clearBtn.addEventListener('click', handleClear);
-  openFolderBtn.addEventListener('click', handleOpenFolder);
-  closeResultsBtn.addEventListener('click', () => resultsOverlay.classList.add('hidden'));
-  
-  // Settings change events
-  resizeTypeRadios.forEach(radio => {
-    radio.addEventListener('change', toggleResizeSettings);
-  });
-  
-  qualityInput.addEventListener('input', handleQualityChange);
-  
-  // Save settings on change
-  const settingsInputs = [widthInput, percentageInput, formatSelect, qualityInput, stripMetadataCheckbox];
-  settingsInputs.forEach(input => {
-    input.addEventListener('change', updateSettingsFromUI);
-  });
-  resizeTypeRadios.forEach(radio => {
-    radio.addEventListener('change', updateSettingsFromUI);
-  });
-  
-  // Setup progress update listener
-  window.electronAPI.onProcessProgress(handleProgressUpdate);
-  
-  // Format change
-  formatSelect.addEventListener('change', handleFormatChange);
-}
-
-// Handle file drag over
-function handleDragOver(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  dropZone.classList.add('active');
-}
-
-// Handle file drag leave
-function handleDragLeave(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  dropZone.classList.remove('active');
-}
-
-// Handle file drop
-function handleDrop(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  dropZone.classList.remove('active');
-  
-  if (e.dataTransfer.files.length > 0) {
-    handleFiles(e.dataTransfer.files);
-  }
-}
-
-// Handle file selection via button
-function handleFileSelect() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.multiple = true;
-  input.accept = 'image/*';
-  
-  input.onchange = (e) => {
-    if (e.target.files.length > 0) {
-      handleFiles(e.target.files);
+// Load settings from storage
+async function loadSettings() {
+    try {
+        const savedSettings = await ipcRenderer.invoke('get-settings');
+        if (savedSettings) {
+            settings = { ...settings, ...savedSettings };
+        }
+        
+        // Get output directory
+        const outputDir = await ipcRenderer.invoke('get-output-dir');
+        if (outputDir) {
+            settings.outputDir = outputDir;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
     }
-  };
-  
-  input.click();
 }
 
-// Process selected files
-function handleFiles(fileList) {
-  const supportedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.tiff', '.tif', '.gif', '.svg', '.heif'];
-  
-  const newFiles = Array.from(fileList).filter(file => {
-    const fileType = file.type.toLowerCase();
-    const fileName = file.name.toLowerCase();
-    
-    // Check by MIME type
-    if (fileType.includes('image')) {
-      return true;
-    }
-    
-    // If MIME type is not detected, check by extension
-    return supportedExtensions.some(ext => fileName.endsWith(ext));
-  });
-  
-  if (newFiles.length === 0) {
-    alert('Please select valid image files (JPG, PNG, WebP, HEIC, TIFF, GIF, SVG, HEIF)');
-    return;
-  }
-  
-  // Add files to our selected files array
-  selectedFiles = [...selectedFiles, ...newFiles];
-  
-  // Update UI
-  updateFileList();
-  processBtn.disabled = selectedFiles.length === 0;
-}
-
-// Update the file list UI
-function updateFileList() {
-  fileList.innerHTML = '';
-  
-  if (selectedFiles.length > 0) {
-    fileList.classList.remove('hidden');
-    
-    selectedFiles.forEach((file, index) => {
-      const fileItem = document.createElement('div');
-      fileItem.className = 'file-item';
-      
-      const fileName = document.createElement('div');
-      fileName.className = 'file-name';
-      fileName.textContent = file.name;
-      
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'file-remove';
-      removeBtn.innerHTML = '&times;';
-      removeBtn.addEventListener('click', () => removeFile(index));
-      
-      fileItem.appendChild(fileName);
-      fileItem.appendChild(removeBtn);
-      fileList.appendChild(fileItem);
+// Update UI from settings
+function updateUI() {
+    // Format buttons
+    formatButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.format === settings.format);
     });
-  } else {
-    fileList.classList.add('hidden');
-  }
-}
 
-// Remove a file from the list
-function removeFile(index) {
-  selectedFiles.splice(index, 1);
-  updateFileList();
-  processBtn.disabled = selectedFiles.length === 0;
-}
-
-// Toggle resize settings based on the selected resize type
-function toggleResizeSettings() {
-  const resizeType = document.querySelector('input[name="resizeType"]:checked').value;
-  
-  if (resizeType === 'width') {
-    widthSetting.classList.remove('hidden');
-    percentageSetting.classList.add('hidden');
-  } else {
-    widthSetting.classList.add('hidden');
-    percentageSetting.classList.remove('hidden');
-  }
-}
-
-// Handle quality slider change
-function handleQualityChange() {
-  const quality = qualityInput.value;
-  qualityValue.textContent = `${quality}%`;
-  updateQualitySlider();
-}
-
-// Update quality slider gradient
-function updateQualitySlider() {
-  const value = qualityInput.value;
-  qualityInput.style.background = `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${value}%, var(--border-color) ${value}%, var(--border-color) 100%)`;
-}
-
-// Handle output directory selection
-async function handleOutputDirSelect() {
-  const dir = await window.electronAPI.selectOutputDir();
-  if (dir) {
-    outputDirInput.value = dir;
-  }
-}
-
-// Update settings object from UI values
-function updateSettingsFromUI() {
-  settings = {
-    resizeType: document.querySelector('input[name="resizeType"]:checked').value,
-    width: parseInt(widthInput.value) || 800,
-    percentage: parseInt(percentageInput.value) || 50,
-    format: formatSelect.value,
-    quality: parseInt(qualityInput.value) || 80,
-    stripMetadata: stripMetadataCheckbox.checked
-  };
-  
-  // Save the settings
-  window.electronAPI.saveSettings({
-    lastUsedSettings: settings
-  });
-}
-
-// Handle process button click
-async function handleProcess() {
-  if (selectedFiles.length === 0) return;
-  
-  // Show progress overlay
-  progressOverlay.classList.remove('hidden');
-  progressBar.style.width = '0%';
-  progressText.textContent = `Processing 0 of ${selectedFiles.length}`;
-  currentFileText.textContent = 'Starting...';
-  
-  // Update settings from UI
-  updateSettingsFromUI();
-  
-  try {
-    // Create an array of file objects
-    const files = [];
-    for (const file of selectedFiles) {
-      // Create a blob copy of the file that can be sent to the main process
-      const arrayBuffer = await file.arrayBuffer();
-      files.push({
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        buffer: Array.from(new Uint8Array(arrayBuffer))
-      });
-    }
-    
-    // Process images
-    const results = await window.electronAPI.processImages({
-      files,
-      settings
+    // Size buttons
+    sizeButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.preset === settings.preset);
     });
-    
-    // Show results
-    showResults(results);
-  } catch (error) {
-    console.error('Error processing images:', error);
-    alert('An error occurred while processing images. Please try again.');
-    progressOverlay.classList.add('hidden');
-  }
-}
 
-// Handle progress updates
-function handleProgressUpdate(event, data) {
-  const percent = Math.round((data.current / data.total) * 100);
-  progressBar.style.width = `${percent}%`;
-  progressText.textContent = `Processing ${data.current} of ${data.total}`;
-  currentFileText.textContent = `Current: ${data.file}`;
-}
-
-// Show results overlay
-function showResults(results) {
-  // Hide progress overlay
-  progressOverlay.classList.add('hidden');
-  
-  // Calculate stats
-  const processed = results.length;
-  const successful = results.filter(r => r.success).length;
-  const failed = results.filter(r => !r.success).length;
-  
-  let totalSizeOriginal = 0;
-  let totalSizeNew = 0;
-  
-  results.forEach(result => {
-    if (result.success) {
-      totalSizeOriginal += result.originalSize;
-      totalSizeNew += result.newSize;
-    }
-  });
-  
-  const savedBytes = totalSizeOriginal - totalSizeNew;
-  const savedPercent = totalSizeOriginal > 0 ? Math.round((savedBytes / totalSizeOriginal) * 100) : 0;
-  
-  // Update UI
-  processedCount.textContent = processed;
-  successCount.textContent = successful;
-  errorCount.textContent = failed;
-  totalSaved.textContent = savedPercent > 0 ? `${savedPercent}%` : '0%';
-  
-  // Populate results list
-  resultsList.innerHTML = '';
-  
-  results.forEach(result => {
-    const resultItem = document.createElement('div');
-    resultItem.className = 'result-item';
-    
-    const resultIcon = document.createElement('div');
-    resultIcon.className = result.success ? 'result-icon success' : 'result-icon error';
-    resultIcon.innerHTML = result.success ? '✓' : '✗';
-    
-    const resultDetails = document.createElement('div');
-    resultDetails.className = 'result-details';
-    
-    const resultName = document.createElement('div');
-    resultName.className = 'result-name';
-    resultName.textContent = result.name;
-    
-    const resultStats = document.createElement('div');
-    resultStats.className = 'result-stats';
-    
-    if (result.success) {
-      const originalSize = formatFileSize(result.originalSize);
-      const newSize = formatFileSize(result.newSize);
-      resultStats.textContent = `${originalSize} → ${newSize} (${result.savingsPercent}% saved)`;
+    // Custom size visibility
+    if (settings.preset === 'custom') {
+        customSizeGroup.classList.remove('hidden');
     } else {
-      resultStats.textContent = `Error: ${result.error}`;
+        customSizeGroup.classList.add('hidden');
     }
-    
-    resultDetails.appendChild(resultName);
-    resultDetails.appendChild(resultStats);
-    
-    resultItem.appendChild(resultIcon);
-    resultItem.appendChild(resultDetails);
-    resultsList.appendChild(resultItem);
-  });
-  
-  // Show results overlay
-  resultsOverlay.classList.remove('hidden');
+
+    // Quality
+    qualitySlider.value = settings.quality;
+    qualityValue.textContent = `${settings.quality}%`;
+
+    // Custom dimensions
+    customWidth.value = settings.customWidth;
+    customHeight.value = settings.customHeight;
+
+    // Modal settings
+    stripMetadata.checked = settings.stripMetadata;
+    autoOpenOutput.checked = settings.autoOpenOutput;
+    overwriteFiles.checked = settings.overwriteFiles;
+    outputPath.value = settings.outputDir;
+    defaultFormat.value = settings.format;
+    defaultResolution.value = settings.preset;
 }
 
-// Format file size to human-readable format
+// Save settings
+async function saveSettingsToStorage() {
+    try {
+        await ipcRenderer.invoke('save-settings', settings);
+    } catch (error) {
+        console.error('Error saving settings:', error);
+    }
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    // Drop zone
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', handleDragOver);
+    dropZone.addEventListener('dragleave', handleDragLeave);
+    dropZone.addEventListener('drop', handleDrop);
+    fileInput.addEventListener('change', handleFileSelect);
+
+    // Format buttons
+    formatButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            formatButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            settings.format = btn.dataset.format;
+            saveSettingsToStorage();
+        });
+    });
+
+    // Size buttons
+    sizeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            sizeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            settings.preset = btn.dataset.preset;
+            
+            if (settings.preset === 'custom') {
+                customSizeGroup.classList.remove('hidden');
+            } else {
+                customSizeGroup.classList.add('hidden');
+            }
+            
+            saveSettingsToStorage();
+        });
+    });
+
+    // Quality slider
+    qualitySlider.addEventListener('input', (e) => {
+        settings.quality = parseInt(e.target.value);
+        qualityValue.textContent = `${settings.quality}%`;
+        saveSettingsToStorage();
+    });
+
+    // Custom dimensions
+    customWidth.addEventListener('change', (e) => {
+        settings.customWidth = parseInt(e.target.value) || 1920;
+        saveSettingsToStorage();
+    });
+
+    customHeight.addEventListener('change', (e) => {
+        settings.customHeight = parseInt(e.target.value) || 1080;
+        saveSettingsToStorage();
+    });
+
+    // Settings modal
+    settingsBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'flex';
+    });
+
+    closeSettings.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+    });
+
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.style.display = 'none';
+        }
+    });
+
+    // Modal form elements
+    stripMetadata.addEventListener('change', (e) => {
+        settings.stripMetadata = e.target.checked;
+        saveSettingsToStorage();
+    });
+
+    autoOpenOutput.addEventListener('change', (e) => {
+        settings.autoOpenOutput = e.target.checked;
+        saveSettingsToStorage();
+    });
+
+    overwriteFiles.addEventListener('change', (e) => {
+        settings.overwriteFiles = e.target.checked;
+        saveSettingsToStorage();
+    });
+
+    selectOutputDir.addEventListener('click', async () => {
+        const dir = await ipcRenderer.invoke('select-output-dir');
+        if (dir) {
+            settings.outputDir = dir;
+            outputPath.value = dir;
+            saveSettingsToStorage();
+        }
+    });
+
+    defaultFormat.addEventListener('change', (e) => {
+        settings.format = e.target.value;
+        updateUI();
+        saveSettingsToStorage();
+    });
+
+    defaultResolution.addEventListener('change', (e) => {
+        settings.preset = e.target.value;
+        updateUI();
+        saveSettingsToStorage();
+    });
+
+    saveSettings.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+        showNotification('Settings saved successfully', 'success');
+    });
+
+    resetSettings.addEventListener('click', () => {
+        settings = {
+            format: 'jpeg',
+            quality: 80,
+            preset: 'custom',
+            customWidth: 1920,
+            customHeight: 1080,
+            stripMetadata: true,
+            autoOpenOutput: true,
+            overwriteFiles: false,
+            outputDir: ''
+        };
+        updateUI();
+        saveSettingsToStorage();
+        showNotification('Settings reset to defaults', 'info');
+    });
+
+    // Dashboard actions
+    openFolderBtn.addEventListener('click', () => {
+        if (settings.outputDir) {
+            ipcRenderer.invoke('open-folder', settings.outputDir);
+        }
+    });
+
+    processMoreBtn.addEventListener('click', () => {
+        resetToDropZone();
+        fileInput.click();
+    });
+
+    newConversionBtn.addEventListener('click', () => {
+        resetToDropZone();
+    });
+}
+
+// Drag and drop handlers
+function handleDragOver(e) {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+    if (!dropZone.contains(e.relatedTarget)) {
+        dropZone.classList.remove('drag-over');
+    }
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+    if (files.length > 0) {
+        processImages(files);
+    }
+}
+
+function handleFileSelect(e) {
+    const files = Array.from(e.target.files).filter(file => file.type.startsWith('image/'));
+    if (files.length > 0) {
+        processImages(files);
+    }
+}
+
+// Process images
+async function processImages(files) {
+    processStartTime = Date.now();
+    
+    // Hide drop zone and show processing
+    dropZone.style.display = 'none';
+    processingState.style.display = 'block';
+    resultsDashboard.style.display = 'none';
+
+    // Reset progress
+    progressFill.style.width = '0%';
+    processedCount.textContent = '0';
+    totalCount.textContent = files.length;
+
+    try {
+        // Convert files to the format expected by main process
+        const fileData = await Promise.all(files.map(async (file) => {
+            const buffer = await file.arrayBuffer();
+            return {
+                name: file.name,
+                size: file.size,
+                buffer: new Uint8Array(buffer)
+            };
+        }));
+
+        // Process images
+        const results = await ipcRenderer.invoke('process-images', {
+            files: fileData,
+            settings
+        });
+
+        // Show results
+        showResults(results, files.length);
+
+    } catch (error) {
+        console.error('Error processing images:', error);
+        showNotification('Error processing images', 'error');
+        resetToDropZone();
+    }
+}
+
+// Show results dashboard
+function showResults(results, totalFiles) {
+    const endTime = Date.now();
+    const processingTime = Math.round((endTime - processStartTime) / 1000);
+
+    // Hide processing, show results
+    processingState.style.display = 'none';
+    resultsDashboard.style.display = 'block';
+
+    // Calculate statistics
+    const successful = results.filter(r => r.success).length;
+    const totalSpaceSaved = results.reduce((acc, r) => {
+        if (r.success) {
+            return acc + (r.originalSize - r.newSize);
+        }
+        return acc;
+    }, 0);
+
+    const avgReductionPercent = results.length > 0 
+        ? Math.round(results.reduce((acc, r) => {
+            return acc + (r.savingsPercent || 0);
+        }, 0) / results.length)
+        : 0;
+
+    // Update statistics
+    successCount.textContent = successful;
+    spaceSaved.textContent = formatFileSize(totalSpaceSaved);
+    avgReduction.textContent = `${avgReductionPercent}%`;
+    processTime.textContent = `${processingTime}s`;
+
+    // Update results list
+    resultsList.innerHTML = '';
+    results.forEach(result => {
+        const item = document.createElement('div');
+        item.className = `result-item ${result.success ? 'success' : 'error'}`;
+        
+        if (result.success) {
+            const savings = formatFileSize(result.originalSize - result.newSize);
+            item.innerHTML = `
+                <span class="result-filename">${result.name}</span>
+                <span class="result-savings">-${savings} (${result.savingsPercent}%)</span>
+            `;
+        } else {
+            item.innerHTML = `
+                <span class="result-filename">${result.name}</span>
+                <span class="result-error">${result.error}</span>
+            `;
+        }
+        
+        resultsList.appendChild(item);
+    });
+
+    // Auto-open folder if enabled
+    if (settings.autoOpenOutput && settings.outputDir) {
+        setTimeout(() => {
+            ipcRenderer.invoke('open-folder', settings.outputDir);
+        }, 1000);
+    }
+}
+
+// Reset to drop zone
+function resetToDropZone() {
+    dropZone.style.display = 'block';
+    processingState.style.display = 'none';
+    resultsDashboard.style.display = 'none';
+    fileInput.value = '';
+}
+
+// Format file size
 function formatFileSize(bytes) {
-  if (bytes < 1024) {
-    return bytes + ' B';
-  } else if (bytes < 1024 * 1024) {
-    return (bytes / 1024).toFixed(1) + ' KB';
-  } else {
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  }
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-// Handle clear button click
-function handleClear() {
-  selectedFiles = [];
-  updateFileList();
-  processBtn.disabled = true;
+// Show notification
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    // Add to body
+    document.body.appendChild(notification);
+    
+    // Show with animation
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateY(0)';
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
 }
 
-// Handle open folder button click
-async function handleOpenFolder() {
-  if (outputDirInput.value) {
-    await window.electronAPI.openFolder(outputDirInput.value);
-  }
-}
+// Handle progress updates from main process
+ipcRenderer.on('process-progress', (_, data) => {
+    const progress = (data.current / data.total) * 100;
+    progressFill.style.width = `${progress}%`;
+    currentFile.textContent = data.file;
+    processedCount.textContent = data.current;
+});
 
-// Handle format change
-function handleFormatChange() {
-  const format = formatSelect.value;
-  
-  // Find the quality setting container
-  const qualityContainer = document.querySelector('.setting-group .range-container').closest('.setting-group');
-  
-  // GIF doesn't support quality settings in the same way as other formats
-  if (format === 'gif') {
-    qualityContainer.classList.add('disabled');
-    qualityInput.disabled = true;
-  } else {
-    qualityContainer.classList.remove('disabled');
-    qualityInput.disabled = false;
-  }
-  
-  updateSettingsFromUI();
-}
-
-// Initialize the app
-document.addEventListener('DOMContentLoaded', initApp); 
+// Initialize app
+init(); 

@@ -1,15 +1,14 @@
 {
-  "name": "image-batch-processor",
-  "productName": "Image Batch Processor",
+  "name": "limye",
+  "productName": "Limyè",
   "version": "1.0.0",
-  "description": "A desktop app to resize, convert, and optimize images in batch",
+  "description": "A minimalist image processing app for macOS",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "nodemon --exec electron .",
+    "dev": "cross-env NODE_ENV=development electron .",
     "build": "electron-builder",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win"
+    "build:mac": "electron-builder --mac"
   },
   "keywords": [
     "electron",
@@ -17,33 +16,45 @@
     "processing",
     "sharp",
     "resize",
-    "converter"
+    "converter",
+    "macos"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "electron": "^36.2.0",
+    "electron": "^28.0.0",
     "electron-builder": "^26.0.12",
     "electron-store": "^8.1.0",
-    "sharp": "^0.34.1"
+    "sharp": "^0.34.2"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
-    "nodemon": "^3.1.10"
+    "cross-env": "^7.0.3"
   },
   "build": {
-    "appId": "com.r2ace.imagebatchprocessor",
-    "productName": "Image Batch Processor",
+    "appId": "com.limye.app",
+    "productName": "Limyè",
     "mac": {
-      "category": "public.app-category.graphics-design"
-    },
-    "win": {
-      "target": "nsis"
+      "category": "public.app-category.graphics-design",
+      "target": [
+        "dmg"
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "files": [
       "**/*",
       "!.git{,/**}"
     ]
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/R2Ace/imageAppDesk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/R2Ace/imageAppDesk/issues"
+  },
+  "homepage": "https://github.com/R2Ace/imageAppDesk#readme"
 }
