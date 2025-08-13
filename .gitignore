@@ -40,4 +40,4 @@ $RECYCLE.BIN/
 *.swo
 
 # Electron app data
-.electron-store/ 
+.electron-store/ .env

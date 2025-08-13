@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Limyè</title>
+    <title>Épure</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -21,7 +21,7 @@
     <div class="app-container">
         <!-- Header -->
         <header class="app-header">
-            <h1 class="app-title">Limyè</h1>
+            <h1 class="app-title">Épure</h1>
             <p class="app-subtitle">Simple • Fast • Private</p>
         </header>
 
@@ -46,6 +46,45 @@
                     </div>
                 </div>
                 <input type="file" id="fileInput" multiple accept="image/*" hidden>
+            </div>
+
+            <!-- File Preview Stage -->
+            <div class="file-preview-stage" id="filePreviewStage" style="display: none;">
+                <div class="preview-card">
+                    <div class="preview-header">
+                        <h3>Ready to Process</h3>
+                        <p class="preview-subtitle">Review your settings and start when ready</p>
+                    </div>
+                    
+                    <div class="file-list" id="fileList">
+                        <!-- Files will be populated here -->
+                    </div>
+                    
+                    <div class="preview-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Images:</span>
+                            <span class="summary-value" id="fileCount">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Total Size:</span>
+                            <span class="summary-value" id="totalSize">0 MB</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Output Format:</span>
+                            <span class="summary-value" id="outputFormat">JPEG</span>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-actions">
+                        <button class="secondary-btn" id="cancelProcessing">Cancel</button>
+                        <button class="primary-btn" id="startProcessing">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7 16L12 11L17 16M12 4V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Start Processing
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Quick Settings Bar -->
@@ -155,6 +194,51 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Results Popup Modal -->
+    <div class="results-popup-overlay" id="resultsPopup" style="display: none;">
+        <div class="results-popup-modal">
+            <div class="results-popup-header">
+                <div class="success-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h2>Conversion Complete!</h2>
+                <p>Your images have been successfully processed</p>
+            </div>
+            
+            <div class="results-popup-stats">
+                <div class="popup-stat-card primary">
+                    <div class="popup-stat-icon">✓</div>
+                    <div class="popup-stat-value" id="popupSuccessCount">0</div>
+                    <div class="popup-stat-label">Images Processed</div>
+                </div>
+                <div class="popup-stat-card secondary">
+                    <div class="popup-stat-icon">📦</div>
+                    <div class="popup-stat-value" id="popupSpaceSaved">0 MB</div>
+                    <div class="popup-stat-label">Space Saved</div>
+                </div>
+                <div class="popup-stat-card accent">
+                    <div class="popup-stat-icon">📊</div>
+                    <div class="popup-stat-value" id="popupAvgReduction">0%</div>
+                    <div class="popup-stat-label">Avg Reduction</div>
+                </div>
+            </div>
+            
+            <div class="results-popup-actions">
+                <button class="secondary-btn" id="viewDetailsBtn">View Details</button>
+                <button class="primary-btn" id="openFolderPopupBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 19C22 19.5304 21.7893 20.0391 21.4142 20.4142C21.0391 20.7893 20.5304 21 20 21H4C3.46957 21 2.96086 20.7893 2.58579 20.4142C2.21071 20.0391 2 19.5304 2 19V5C2 4.46957 2.21071 3.96086 2.58579 3.58579C2.96086 3.21071 3.46957 3 4 3H9L11 6H20C20.5304 6 21.0391 6.21071 21.4142 6.58579C21.7893 6.96086 22 7.46957 22 8V19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Open Folder
+                </button>
+            </div>
+            
+            <button class="close-popup" id="closeResultsPopup">×</button>
+        </div>
     </div>
 
     <!-- Settings Modal -->

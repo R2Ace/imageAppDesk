@@ -2,12 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
-    <!-- Electron runtime requirements -->
-    <key>com.apple.security.cs.allow-jit</key>
-    <true/>
-    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
-    <true/>
-    <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+    <!-- App Store sandboxing (required) -->
+    <key>com.apple.security.app-sandbox</key>
     <true/>
     
     <!-- File system access for image processing -->
@@ -18,17 +14,11 @@
     <key>com.apple.security.files.pictures.read-write</key>
     <true/>
     
-    <!-- Network access (for future updates/licensing) -->
+    <!-- Network access (for licensing/updates) -->
     <key>com.apple.security.network.client</key>
     <true/>
     
-    <!-- Temporary files for image processing -->
-    <key>com.apple.security.temporary-exception.files.absolute-path.read-write</key>
-    <array>
-      <string>/tmp/</string>
-    </array>
-    
-    <!-- Allow access to user directories -->
+    <!-- Allow access to user directories through open panel -->
     <key>com.apple.security.files.bookmarks.app-scope</key>
     <true/>
   </dict>

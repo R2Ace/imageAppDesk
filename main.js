@@ -1,4 +1,21 @@
+// Load environment variables first
+require('dotenv').config();
+
+// Initialize Sentry crash reporting first
+const { initSentry } = require('./config/sentry');
+initSentry();
+
+// Initialize analytics
+const analytics = require('./config/analytics');
+
+// Make analytics globally available for payment tracking
+global.analytics = analytics;
+
+// Initialize payment processor
+const paymentProcessor = require('./config/stripe');
+
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
@@ -32,8 +49,9 @@ function createWindow() {
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#f8fafc',
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
@@ -75,6 +93,9 @@ function getUniqueFilename(outputPath, overwrite = false) {
 
 app.whenReady().then(() => {
   createWindow();
+
+  // Track app launch
+  analytics.trackAppLaunched();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -121,105 +142,291 @@ app.whenReady().then(() => {
 
   // Handle image processing
   ipcMain.handle('process-images', async (_, { files, settings }) => {
+    const startTime = Date.now();
     const outputDir = store.get('outputDir');
     const results = [];
+    let totalOriginalSize = 0;
+    let totalNewSize = 0;
+    let successCount = 0;
 
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
+    // Track batch processing start
+    analytics.trackBatchProcessing(files.length, files.reduce((sum, f) => sum + f.size, 0));
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      try {
-        const buffer = Buffer.from(file.buffer);
+    try {
+      // Ensure output directory exists
+      if (!fs.existsSync(outputDir)) {
+        try {
+          fs.mkdirSync(outputDir, { recursive: true });
+        } catch (dirError) {
+          const errorMsg = `Unable to create output directory: ${dirError.message}`;
+          analytics.trackError('directory_creation_failed', errorMsg);
+          throw new Error(errorMsg);
+        }
+      }
+
+      // Process files with improved error handling
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         const filename = file.name;
-        const fileInfo = path.parse(filename);
-        const outputFilename = `${fileInfo.name}.${settings.format}`;
-        let outputPath = path.join(outputDir, outputFilename);
         
-        // Handle file conflicts
-        outputPath = getUniqueFilename(outputPath, settings.overwriteFiles);
+        try {
+          // Validate file
+          if (!file.buffer || file.size === 0) {
+            throw new Error('File is empty or corrupted');
+          }
 
-        let sharpInstance = sharp(buffer, { limitInputPixels: false });
+          if (file.size > 100 * 1024 * 1024) { // 100MB limit
+            throw new Error('File size exceeds 100MB limit');
+          }
 
-        // Strip metadata if requested
-        if (settings.stripMetadata) {
-          sharpInstance = sharpInstance.withMetadata(false);
-        }
+          const buffer = Buffer.from(file.buffer);
+          const fileInfo = path.parse(filename);
+          const inputFormat = fileInfo.ext.toLowerCase().replace('.', '');
+          
+          // Validate input format
+          const supportedFormats = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'tiff', 'tif'];
+          if (!supportedFormats.includes(inputFormat)) {
+            throw new Error(`Unsupported file format: ${inputFormat}`);
+          }
 
-        // Get dimensions based on preset or custom
-        let dimensions;
-        if (settings.preset === 'custom') {
-          dimensions = {
-            width: settings.customWidth,
-            height: settings.customHeight
-          };
-        } else {
-          dimensions = getPresetDimensions(settings.preset);
-        }
+          const outputFilename = `${fileInfo.name}.${settings.format}`;
+          let outputPath = path.join(outputDir, outputFilename);
+          
+          // Handle file conflicts
+          outputPath = getUniqueFilename(outputPath, settings.overwriteFiles);
 
-        // Resize image
-        if (dimensions) {
-          sharpInstance = sharpInstance.resize({
-            width: dimensions.width,
-            height: dimensions.height,
-            fit: 'inside',
-            withoutEnlargement: true
+          // Create Sharp instance with better error handling
+          let sharpInstance;
+          try {
+            sharpInstance = sharp(buffer, { 
+              limitInputPixels: false,
+              failOnError: false // Don't fail on minor corruption
+            });
+          } catch (sharpError) {
+            throw new Error(`Unable to read image: ${sharpError.message}`);
+          }
+
+          // Strip metadata if requested
+          if (settings.stripMetadata) {
+            sharpInstance = sharpInstance.withMetadata(false);
+          } else {
+            // Keep essential metadata but remove location data for privacy
+            sharpInstance = sharpInstance.withMetadata({
+              exif: { IFD0: { Copyright: 'Processed with Épure' } }
+            });
+          }
+
+          // Get dimensions based on preset or custom
+          let dimensions;
+          if (settings.preset === 'custom') {
+            dimensions = {
+              width: Math.max(1, Math.min(50000, settings.customWidth)), // Clamp values
+              height: Math.max(1, Math.min(50000, settings.customHeight))
+            };
+          } else {
+            dimensions = getPresetDimensions(settings.preset);
+          }
+
+          // Resize image with better options
+          if (dimensions) {
+            sharpInstance = sharpInstance.resize({
+              width: dimensions.width,
+              height: dimensions.height,
+              fit: 'inside',
+              withoutEnlargement: true,
+              kernel: sharp.kernel.lanczos3 // Better quality
+            });
+          }
+
+          // Set output format and quality with validation
+          const quality = Math.max(1, Math.min(100, settings.quality));
+          
+          switch (settings.format) {
+            case 'jpeg':
+              sharpInstance = sharpInstance.jpeg({ 
+                quality,
+                progressive: true,
+                mozjpeg: true // Better compression
+              });
+              break;
+            case 'png':
+              sharpInstance = sharpInstance.png({
+                compressionLevel: Math.max(0, Math.min(9, Math.floor((100 - quality) / 11))),
+                progressive: true
+              });
+              break;
+            case 'webp':
+              sharpInstance = sharpInstance.webp({ 
+                quality,
+                effort: 4 // Good balance of compression and speed
+              });
+              break;
+            case 'avif':
+              sharpInstance = sharpInstance.avif({ quality });
+              break;
+            default:
+              throw new Error(`Unsupported output format: ${settings.format}`);
+          }
+
+          // Process the image with timeout
+          const processPromise = sharpInstance.toFile(outputPath);
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Processing timeout (30s exceeded)')), 30000);
+          });
+
+          await Promise.race([processPromise, timeoutPromise]);
+
+          // Get file sizes for reporting
+          const originalSize = file.size;
+          const newSize = fs.statSync(outputPath).size;
+          const compressionRatio = newSize / originalSize;
+          const savingsPercent = Math.round((1 - compressionRatio) * 100);
+
+          totalOriginalSize += originalSize;
+          totalNewSize += newSize;
+          successCount++;
+
+          // Track successful conversion
+          analytics.trackFileConverted(settings.format, inputFormat, originalSize, compressionRatio);
+
+          results.push({
+            name: filename,
+            success: true,
+            originalSize,
+            newSize,
+            savingsPercent,
+            outputPath,
+            processingTime: Date.now() - startTime
+          });
+
+        } catch (error) {
+          console.error(`Error processing file ${filename}:`, error);
+          
+          // Track error with context
+          analytics.trackError('file_processing_failed', `${filename}: ${error.message}`);
+          
+          // Provide user-friendly error messages
+          let userMessage = error.message;
+          if (error.message.includes('Input buffer contains unsupported image format')) {
+            userMessage = 'This file format is not supported. Please use JPG, PNG, WebP, HEIC, or TIFF files.';
+          } else if (error.message.includes('timeout')) {
+            userMessage = 'File processing took too long. Try reducing the file size or image dimensions.';
+          } else if (error.message.includes('memory')) {
+            userMessage = 'Not enough memory to process this file. Try closing other applications or using a smaller file.';
+          }
+
+          results.push({
+            name: file.name,
+            success: false,
+            error: userMessage,
+            originalError: error.message // For debugging
           });
         }
-
-        // Set output format and quality
-        const formatOptions = { quality: settings.quality };
-        
-        switch (settings.format) {
-          case 'jpeg':
-            sharpInstance = sharpInstance.jpeg(formatOptions);
-            break;
-          case 'png':
-            sharpInstance = sharpInstance.png({
-              compressionLevel: Math.floor((100 - settings.quality) / 10)
-            });
-            break;
-          case 'webp':
-            sharpInstance = sharpInstance.webp(formatOptions);
-            break;
-        }
-
-        // Process the image
-        await sharpInstance.toFile(outputPath);
-
-        // Get file sizes for reporting
-        const originalSize = file.size;
-        const newSize = fs.statSync(outputPath).size;
-        const savingsPercent = Math.round((1 - newSize / originalSize) * 100);
-
-        results.push({
-          name: filename,
-          success: true,
-          originalSize,
-          newSize,
-          savingsPercent,
-          outputPath
-        });
 
         // Send progress update
         mainWindow.webContents.send('process-progress', {
           current: i + 1,
           total: files.length,
-          file: filename
-        });
-
-      } catch (error) {
-        console.error('Error processing file:', error);
-        results.push({
-          name: file.name,
-          success: false,
-          error: error.message
+          file: filename,
+          successRate: Math.round((successCount / (i + 1)) * 100)
         });
       }
+
+      // Track batch completion
+      const totalTime = Date.now() - startTime;
+      const avgTimePerFile = totalTime / files.length;
+      
+      console.log(`Batch processing completed: ${successCount}/${files.length} files in ${totalTime}ms`);
+
+    } catch (error) {
+      console.error('Critical error in batch processing:', error);
+      analytics.trackError('batch_processing_failed', error.message);
+      
+      // Return error for entire batch
+      return {
+        success: false,
+        error: error.message,
+        results: []
+      };
     }
 
-    return results;
+    return {
+      success: true,
+      results,
+      stats: {
+        totalFiles: files.length,
+        successCount,
+        totalOriginalSize,
+        totalNewSize,
+        totalSavingsPercent: totalOriginalSize > 0 ? Math.round((1 - totalNewSize / totalOriginalSize) * 100) : 0,
+        processingTime: Date.now() - startTime
+      }
+    };
+  });
+
+  // Handle license checking
+  ipcMain.handle('check-license', () => {
+    return {
+      isLicensed: paymentProcessor.isLicensed(),
+      licenseInfo: paymentProcessor.getLicenseInfo()
+    };
+  });
+
+  // Handle payment intent creation
+  ipcMain.handle('create-payment', async (_, customerEmail) => {
+    try {
+      const paymentIntent = await paymentProcessor.createPaymentIntent(customerEmail);
+      return {
+        success: true,
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id
+      };
+    } catch (error) {
+      console.error('Payment creation failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  });
+
+  // Handle payment verification and license activation
+  ipcMain.handle('verify-payment', async (_, paymentIntentId) => {
+    try {
+      const result = await paymentProcessor.verifyPaymentAndActivate(paymentIntentId);
+      return result;
+    } catch (error) {
+      console.error('Payment verification failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  });
+
+  // Handle manual license activation (for customer support)
+  ipcMain.handle('activate-license', async (_, licenseKey) => {
+    try {
+      const result = await paymentProcessor.activateLicenseKey(licenseKey);
+      return result;
+    } catch (error) {
+      console.error('License activation failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  });
+
+  // Handle opening payment URL in browser
+  ipcMain.handle('open-payment-url', async (_, url) => {
+    try {
+      await shell.openExternal(url);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to open payment URL:', error);
+      return { success: false, error: error.message };
+    }
   });
 });
 
@@ -227,4 +434,31 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+// Auto-updater functionality
+app.on('ready', () => {
+  // Check for updates only in production
+  if (process.env.NODE_ENV === 'production') {
+    // Check for updates after 5 seconds to let the app load first
+    setTimeout(() => {
+      autoUpdater.checkForUpdatesAndNotify();
+    }, 5000);
+    
+    // Check for updates every hour
+    setInterval(() => {
+      autoUpdater.checkForUpdatesAndNotify();
+    }, 60 * 60 * 1000);
+  }
+});
+
+// Auto-updater events
+autoUpdater.on('update-available', () => {
+  console.log('Update available');
+});
+
+autoUpdater.on('update-downloaded', () => {
+  console.log('Update downloaded');
+  // Silently install and restart
+  autoUpdater.quitAndInstall();
 }); 

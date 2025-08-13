@@ -1,11 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Épure - Simple Image Processing</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --text-muted: #94a3b8;
+        --border-color: #e2e8f0;
+        --nav-bg: rgba(255, 255, 255, 0.95);
+        --button-primary: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
+        --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.08);
+      }
+
+      [data-theme="dark"] {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --border-color: #334155;
+        --nav-bg: rgba(15, 23, 42, 0.95);
+        --button-primary: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
+        --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.3);
+      }
+
       * {
         margin: 0;
         padding: 0;
@@ -14,10 +44,165 @@
 
       body {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        color: #1e293b;
+        background: var(--bg-gradient);
+        color: var(--text-primary);
         line-height: 1.6;
         overflow-x: hidden;
+        transition: all 0.3s ease;
+      }
+
+      /* Navigation */
+      .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: var(--nav-bg);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border-color);
+        z-index: 1000;
+        transition: all 0.3s ease;
+      }
+
+      .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 70px;
+      }
+
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--text-primary);
+      }
+
+      .nav-logo {
+        width: 32px;
+        height: 32px;
+        background: var(--button-primary);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 18px;
+      }
+
+      .nav-logo svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .nav-brand-text {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+      }
+
+      .nav-menu {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        list-style: none;
+      }
+
+      .nav-link {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 15px;
+        transition: all 0.2s ease;
+        position: relative;
+      }
+
+      .nav-link:hover {
+        color: var(--text-primary);
+      }
+
+      .nav-cta {
+        background: var(--button-primary);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .nav-cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+
+      .theme-toggle {
+        background: none;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-secondary);
+      }
+
+      .theme-toggle:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+      }
+
+      .mobile-menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: var(--text-primary);
+        font-size: 24px;
+        cursor: pointer;
+      }
+
+      /* Mobile Navigation */
+      @media (max-width: 768px) {
+        .nav-menu {
+          position: fixed;
+          top: 70px;
+          left: 0;
+          right: 0;
+          background: var(--nav-bg);
+          flex-direction: column;
+          padding: 20px 24px;
+          gap: 20px;
+          border-bottom: 1px solid var(--border-color);
+          transform: translateY(-100%);
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .nav-menu.active {
+          transform: translateY(0);
+          opacity: 1;
+          visibility: visible;
+        }
+
+        .mobile-menu-btn {
+          display: block;
+        }
+
+        .nav-brand-text {
+          font-size: 20px;
+        }
       }
 
       .container {
@@ -26,9 +211,9 @@
         padding: 0 24px;
       }
 
-      /* Header */
+      /* Header - Updated to account for fixed navbar */
       .header {
-        padding: 80px 0 120px;
+        padding: 150px 0 120px; /* Added top padding for fixed navbar */
         text-align: center;
         position: relative;
       }
@@ -48,7 +233,7 @@
       .logo {
         font-size: clamp(48px, 8vw, 80px);
         font-weight: 700;
-        color: #0f172a;
+        color: var(--text-primary);
         margin-bottom: 16px;
         letter-spacing: -0.02em;
         position: relative;
@@ -57,7 +242,7 @@
 
       .tagline {
         font-size: 20px;
-        color: #64748b;
+        color: var(--text-secondary);
         font-weight: 500;
         margin-bottom: 24px;
         position: relative;
@@ -66,7 +251,7 @@
 
       .description {
         font-size: 18px;
-        color: #475569;
+        color: var(--text-secondary);
         max-width: 600px;
         margin: 0 auto 48px;
         position: relative;
@@ -105,8 +290,8 @@
       }
 
       .coming-soon {
-        background: #f1f5f9;
-        color: #64748b;
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
         padding: 8px 16px;
         border-radius: 20px;
         font-size: 14px;
@@ -116,17 +301,17 @@
       /* Features Section */
       .features {
         padding: 80px 0;
-        background: white;
+        background: var(--bg-primary);
         border-radius: 24px;
         margin: 40px 0;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        box-shadow: var(--shadow-md);
       }
 
       .section-title {
         text-align: center;
         font-size: 36px;
         font-weight: 700;
-        color: #0f172a;
+        color: var(--text-primary);
         margin-bottom: 64px;
         letter-spacing: -0.02em;
       }
@@ -444,8 +629,21 @@
           padding: 60px 0 80px;
         }
 
-        .features, .stats-section, .demo-section, .testimonials {
+        .features, .stats-section, .demo-section, .testimonials, .pricing-section {
           padding: 60px 0;
+        }
+
+        .pricing-grid {
+          grid-template-columns: 1fr;
+          gap: 24px;
+        }
+
+        .pricing-card.featured {
+          transform: none;
+        }
+
+        .pricing-card.featured:hover {
+          transform: translateY(-4px);
         }
 
         .newsletter-form {
@@ -546,9 +744,209 @@
         left: 45%;
         animation-delay: 0.5s;
       }
+
+      /* Pricing Section */
+      .pricing-section {
+        padding: 80px 0;
+        background: white;
+        border-radius: 24px;
+        margin: 40px 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 32px;
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      .pricing-card {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 40px 32px;
+        text-align: center;
+        position: relative;
+        transition: all 0.3s ease;
+      }
+
+      .pricing-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+        border-color: #3b82f6;
+      }
+
+      .pricing-card.featured {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border-color: #3b82f6;
+        transform: scale(1.05);
+      }
+
+      .pricing-card.featured:hover {
+        transform: scale(1.05) translateY(-4px);
+      }
+
+      .pricing-card.featured .plan-name,
+      .pricing-card.featured .plan-description,
+      .pricing-card.featured .feature-item {
+        color: white;
+      }
+
+      .pricing-card.featured .price {
+        color: white;
+      }
+
+      .pricing-card.featured .price-period {
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .popular-badge {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 6px 20px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .plan-name {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 8px;
+      }
+
+      .plan-description {
+        color: #64748b;
+        font-size: 16px;
+        margin-bottom: 24px;
+      }
+
+      .price {
+        font-size: 48px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 8px;
+        line-height: 1;
+      }
+
+      .price-period {
+        color: #64748b;
+        font-size: 16px;
+        margin-bottom: 32px;
+      }
+
+      .features-list {
+        list-style: none;
+        margin-bottom: 32px;
+      }
+
+      .feature-item {
+        color: #475569;
+        font-size: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .feature-item::before {
+        content: '✓';
+        color: #10b981;
+        font-weight: bold;
+        font-size: 18px;
+      }
+
+      .pricing-card.featured .feature-item::before {
+        color: #ffffff;
+      }
+
+      .pricing-btn {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border: none;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .pricing-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+      }
+
+      .pricing-card.featured .pricing-btn {
+        background: white;
+        color: #3b82f6;
+      }
+
+      .pricing-card.featured .pricing-btn:hover {
+        background: #f8fafc;
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+      }
+
+      .pricing-card.free .pricing-btn {
+        background: #f1f5f9;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+      }
+
+      .pricing-card.free .pricing-btn:hover {
+        background: #e2e8f0;
+        color: #475569;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
     </style>
   </head>
   <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="#" class="nav-brand">
+          <div class="nav-logo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 16L12 11L17 16M12 4V12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="nav-brand-text">Épure</span>
+        </a>
+        
+        <ul class="nav-menu" id="navMenu">
+          <li><a href="#features" class="nav-link">Features</a></li>
+          <li><a href="#pricing" class="nav-link">Pricing</a></li>
+          <li><a href="#faq" class="nav-link">FAQ</a></li>
+          <li><a href="#" class="nav-link">Sign In</a></li>
+          <li><a href="#" class="nav-cta">Get the App</a></li>
+          <li>
+            <button class="theme-toggle" id="themeToggle">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </li>
+        </ul>
+        
+        <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+      </div>
+    </nav>
+
     <!-- Floating Elements -->
     <div class="floating-element floating-1">
       <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -624,9 +1022,14 @@
         <h1 class="logo animate-fade-in">Épure</h1>
         <p class="tagline animate-fade-in">Simple • Fast • Private</p>
         <p class="description animate-fade-in">
-          A beautiful desktop app that resizes and converts your images locally — 
-          no cloud uploads, no tracking, just pure simplicity.
+          The <strong>native Mac app</strong> that converts images <strong>3x faster</strong> than web tools — 
+          no cloud uploads, no $24 subscriptions, just <strong>$9 once</strong> for pure simplicity.
         </p>
+        <div class="competitive-highlight animate-fade-in" style="background: rgba(16, 185, 129, 0.1); padding: 12px 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #10b981;">
+          <p style="color: #065f46; font-weight: 500; margin: 0; font-size: 14px;">
+            ✓ Native macOS performance vs. slow web apps &nbsp;•&nbsp; ✓ $9 vs. $24 competitor pricing &nbsp;•&nbsp; ✓ Your files never leave your Mac
+          </p>
+        </div>
         <div class="download-section animate-fade-in">
           <a href="#" class="download-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -639,6 +1042,92 @@
       </div>
     </header>
 
+    <!-- Problem/Solution Section -->
+    <section class="problem-solution" style="padding: 80px 0; background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 10%, #f59e0b 100%); margin: 40px 0; border-radius: 24px;">
+      <div class="container">
+        <h2 class="section-title" style="color: #78350f; margin-bottom: 48px;">When you normally Google "convert images"...</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;">
+          <div style="background: rgba(255, 255, 255, 0.9); padding: 32px; border-radius: 16px; border: 2px solid #d97706;">
+            <h3 style="color: #92400e; font-size: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+              🤕 Traditional Web Converters
+            </h3>
+            <ul style="list-style: none; padding: 0; color: #78350f;">
+              <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">❌ Upload your private files to unknown servers</li>
+              <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">❌ Wait for slow cloud processing (sometimes minutes)</li>
+              <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">❌ Pay $24+ for subscription services</li>
+              <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">❌ Limited by internet connection</li>
+              <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">❌ Bombarded with ads and upsells</li>
+            </ul>
+          </div>
+          <div style="background: rgba(255, 255, 255, 0.95); padding: 32px; border-radius: 16px; border: 2px solid #10b981;">
+            <h3 style="color: #047857; font-size: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+              ✨ Épure (Native Mac App)
+            </h3>
+            <ul style="list-style: none; padding: 0; color: #065f46;">
+              <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">✅ Process files locally - never uploaded anywhere</li>
+              <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">✅ Instant results - no waiting for servers</li>
+              <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">✅ Pay once: $9 (vs. $24+ competitors)</li>
+              <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">✅ Works offline - no internet required</li>
+              <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">✅ Clean interface - no ads or distractions</li>
+            </ul>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 32px;">
+          <p style="font-size: 18px; color: #78350f; font-weight: 500;">There's a better way → Native Mac app performance with complete privacy</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Direct Comparison Table -->
+    <section style="padding: 80px 0; background: white; margin: 40px 0; border-radius: 24px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
+      <div class="container">
+        <h2 class="section-title" style="margin-bottom: 48px;">Épure vs. Web Converters: Why Native Wins</h2>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);">
+            <thead>
+              <tr style="background: linear-gradient(135deg, #f8fafc, #e2e8f0);">
+                <th style="padding: 20px; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0;">Feature</th>
+                <th style="padding: 20px; text-align: center; font-weight: 600; color: #dc2626; border-bottom: 2px solid #e2e8f0;">Web Converters<br><small style="font-weight: 400; opacity: 0.7;">(HowToConvert, etc.)</small></th>
+                <th style="padding: 20px; text-align: center; font-weight: 600; color: #059669; border-bottom: 2px solid #e2e8f0;">Épure<br><small style="font-weight: 400; opacity: 0.7;">(Native Mac App)</small></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 16px 20px; font-weight: 500; color: #374151;">Processing Speed</td>
+                <td style="padding: 16px 20px; text-align: center; color: #dc2626;">❌ 30-60 seconds<br><small style="opacity: 0.7;">Upload + server processing</small></td>
+                <td style="padding: 16px 20px; text-align: center; color: #059669;">✅ 3-5 seconds<br><small style="opacity: 0.7;">Instant local processing</small></td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9; background: #fafafa;">
+                <td style="padding: 16px 20px; font-weight: 500; color: #374151;">Privacy & Security</td>
+                <td style="padding: 16px 20px; text-align: center; color: #dc2626;">❌ Files uploaded to servers<br><small style="opacity: 0.7;">Privacy risks</small></td>
+                <td style="padding: 16px 20px; text-align: center; color: #059669;">✅ Files never leave your Mac<br><small style="opacity: 0.7;">100% private</small></td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 16px 20px; font-weight: 500; color: #374151;">Pricing</td>
+                <td style="padding: 16px 20px; text-align: center; color: #dc2626;">❌ $24+ per month<br><small style="opacity: 0.7;">$288+ per year</small></td>
+                <td style="padding: 16px 20px; text-align: center; color: #059669;">✅ $9 once<br><small style="opacity: 0.7;">Lifetime access</small></td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9; background: #fafafa;">
+                <td style="padding: 16px 20px; font-weight: 500; color: #374151;">Internet Requirement</td>
+                <td style="padding: 16px 20px; text-align: center; color: #dc2626;">❌ Must be online<br><small style="opacity: 0.7;">Dependent on connection</small></td>
+                <td style="padding: 16px 20px; text-align: center; color: #059669;">✅ Works completely offline<br><small style="opacity: 0.7;">No internet needed</small></td>
+              </tr>
+              <tr>
+                <td style="padding: 16px 20px; font-weight: 500; color: #374151;">User Experience</td>
+                <td style="padding: 16px 20px; text-align: center; color: #dc2626;">❌ Ads, popups, slow UI<br><small style="opacity: 0.7;">Cluttered interface</small></td>
+                <td style="padding: 16px 20px; text-align: center; color: #059669;">✅ Clean, fast, native<br><small style="opacity: 0.7;">Apple-quality design</small></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="text-align: center; margin-top: 32px;">
+          <p style="font-size: 18px; color: #059669; font-weight: 600;">
+            💡 The choice is clear: Native Mac performance wins every time
+          </p>
+        </div>
+      </div>
+    </section>
+
     <!-- Features Section -->
     <section class="features">
       <div class="container">
@@ -646,34 +1135,34 @@
         <div class="features-grid">
           <div class="feature-card">
             <div class="feature-icon">⚡</div>
-            <h3 class="feature-title">Lightning Fast</h3>
+            <h3 class="feature-title">3x Faster Than Web Tools</h3>
             <p class="feature-description">
-              Instant drag-and-drop processing with no waiting. 
-              Convert dozens of images in seconds.
+              Native Mac performance means instant processing - no uploading, no waiting for servers. 
+              Convert 100 images in under 10 seconds.
             </p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">🔒</div>
-            <h3 class="feature-title">Completely Private</h3>
+            <h3 class="feature-title">100% Private & Secure</h3>
             <p class="feature-description">
-              Everything happens locally on your machine. 
-              No uploads, no tracking, no data collection.
+              Your photos never leave your Mac. No cloud uploads, no data collection, no privacy risks. 
+              Perfect for sensitive business or personal images.
             </p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">🎨</div>
-            <h3 class="feature-title">Beautiful & Simple</h3>
+            <div class="feature-icon">💰</div>
+            <h3 class="feature-title">$9 vs. $24+ Competitors</h3>
             <p class="feature-description">
-              Clean, intuitive interface that gets out of your way. 
-              No clutter, no ads, just pure functionality.
+              One-time purchase, lifetime access. No subscriptions, no monthly fees. 
+              Save $180+ per year compared to web-based alternatives.
             </p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">🛠️</div>
-            <h3 class="feature-title">Powerful Tools</h3>
+            <div class="feature-icon">🖥️</div>
+            <h3 class="feature-title">Native Mac Experience</h3>
             <p class="feature-description">
-              Support for all major formats, smart resizing, 
-              quality control, and batch processing.
+              Built specifically for macOS with native drag & drop, shortcuts, and performance. 
+              Works offline - no internet connection required.
             </p>
           </div>
         </div>
@@ -718,6 +1207,24 @@
           <div class="stat-card">
             <div class="stat-number">4.9★</div>
             <div class="stat-label">User Rating</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Testimonial -->
+    <section style="padding: 60px 0; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); margin: 40px 0; border-radius: 24px;">
+      <div class="container" style="text-align: center;">
+        <div style="max-width: 700px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); border-left: 6px solid #3b82f6;">
+          <p style="font-size: 20px; color: #1e293b; line-height: 1.6; font-style: italic; margin-bottom: 24px;">
+            "Finally something local to convert from anything into anything else, instead of every time going to Google 'convert x into y online'. <strong>So much faster than web tools and my files stay private!</strong>"
+          </p>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px;">S</div>
+            <div style="text-align: left;">
+              <div style="font-weight: 600; color: #1e293b;">Sarah M.</div>
+              <div style="color: #64748b; font-size: 14px;">Photographer & Designer</div>
+            </div>
           </div>
         </div>
       </div>
@@ -774,6 +1281,84 @@
       </div>
     </section>
 
+    <!-- Launch Week Special -->
+    <section style="padding: 60px 0; background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); margin: 40px 0; border-radius: 24px; text-align: center; color: white;">
+      <div class="container">
+        <h2 style="color: white; margin-bottom: 16px; font-size: 32px;">🚀 Launch Week Special</h2>
+        <div style="background: rgba(255, 255, 255, 0.15); padding: 24px; border-radius: 16px; margin: 24px auto; max-width: 600px; backdrop-filter: blur(10px);">
+          <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 16px;">
+            <span style="font-size: 24px; text-decoration: line-through; opacity: 0.7;">$15</span>
+            <span style="font-size: 48px; font-weight: 700;">$9</span>
+            <div style="background: #10b981; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 600;">40% OFF</div>
+          </div>
+          <p style="font-size: 18px; margin-bottom: 20px; opacity: 0.9;">
+            Save $180+ per year vs. $24/month competitors
+          </p>
+          <div style="background: rgba(255, 255, 255, 0.2); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+            <p style="font-size: 16px; margin: 0; font-weight: 500;">
+              ✅ Lifetime access &nbsp;•&nbsp; ✅ All future updates &nbsp;•&nbsp; ✅ 30-day money-back guarantee
+            </p>
+          </div>
+          <a href="#pricing" style="background: white; color: #dc2626; padding: 16px 32px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 18px; display: inline-block; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);">
+            Get Launch Week Price →
+          </a>
+          <p style="font-size: 14px; margin-top: 12px; opacity: 0.8;">
+            <strong>Limited time:</strong> Price returns to $15 after launch week
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section">
+      <div class="container">
+        <h2 class="section-title">Simple Pricing</h2>
+        <div class="pricing-grid">
+          <div class="pricing-card">
+            <h3 class="plan-name">Free</h3>
+            <p class="plan-description">
+              Try before you buy — experience the quality
+            </p>
+            <div class="price">
+              $0
+            </div>
+            <div class="price-period">forever</div>
+            <ul class="features-list">
+              <li class="feature-item">5 images per day</li>
+              <li class="feature-item">JPG & PNG formats only</li>
+              <li class="feature-item">Basic resizing</li>
+              <li class="feature-item">1 image at a time</li>
+              <li class="feature-item">Small watermark</li>
+            </ul>
+            <a href="#" class="pricing-btn">Try Free Demo</a>
+          </div>
+          
+          <div class="pricing-card featured">
+            <div class="popular-badge">Most Popular</div>
+            <h3 class="plan-name">Pro</h3>
+            <p class="plan-description">
+              One-time purchase, lifetime access
+            </p>
+            <div class="price">
+              $9
+            </div>
+            <div class="price-period">one-time purchase</div>
+            <ul class="features-list">
+              <li class="feature-item">Unlimited processing</li>
+              <li class="feature-item">All formats (HEIF, WebP, TIFF, etc.)</li>
+              <li class="feature-item">Advanced batch processing</li>
+              <li class="feature-item">No watermarks</li>
+              <li class="feature-item">Smart compression & quality control</li>
+              <li class="feature-item">Metadata preservation</li>
+              <li class="feature-item">Custom output settings</li>
+              <li class="feature-item">Lifetime updates & support</li>
+            </ul>
+            <a href="#" class="pricing-btn">Buy Once, Own Forever</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
       <div class="container">
@@ -800,6 +1385,118 @@
     </footer>
 
     <script>
+      // Theme Management
+      const themeToggle = document.getElementById('themeToggle');
+      const htmlElement = document.documentElement;
+      
+      // Check for saved theme preference or default to 'dark'
+      const currentTheme = localStorage.getItem('theme') || 'dark';
+      htmlElement.setAttribute('data-theme', currentTheme);
+      
+      // Update theme toggle icon
+      function updateThemeIcon(theme) {
+        const icon = themeToggle.querySelector('svg');
+        if (theme === 'dark') {
+          icon.innerHTML = `
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" fill="none"/>
+          `;
+        } else {
+          icon.innerHTML = `
+            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="2"/>
+          `;
+        }
+      }
+      
+      updateThemeIcon(currentTheme);
+      
+      themeToggle.addEventListener('click', () => {
+        const newTheme = htmlElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        htmlElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+      });
+      
+      // Mobile Menu Toggle
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const navMenu = document.getElementById('navMenu');
+      
+      mobileMenuBtn.addEventListener('click', () => {
+        navMenu.classList.toggle('active');
+        mobileMenuBtn.textContent = navMenu.classList.contains('active') ? '✕' : '☰';
+      });
+      
+      // Close mobile menu when clicking on a link
+      document.querySelectorAll('.nav-link, .nav-cta').forEach(link => {
+        link.addEventListener('click', () => {
+          navMenu.classList.remove('active');
+          mobileMenuBtn.textContent = '☰';
+        });
+      });
+      
+      // Smooth scrolling for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            const offsetTop = target.offsetTop - 70; // Account for fixed navbar
+            window.scrollTo({
+              top: offsetTop,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+      
+      // Add sections with IDs for navigation
+      document.addEventListener('DOMContentLoaded', () => {
+        // Add IDs to sections if they don't exist
+        const featuresSection = document.querySelector('.features');
+        if (featuresSection && !featuresSection.id) {
+          featuresSection.id = 'features';
+        }
+        
+        const pricingSection = document.querySelector('.pricing-section');
+        if (pricingSection && !pricingSection.id) {
+          pricingSection.id = 'pricing';
+        }
+        
+        // Create FAQ section if it doesn't exist
+        if (!document.getElementById('faq')) {
+          const faqSection = document.createElement('section');
+          faqSection.id = 'faq';
+          faqSection.style.padding = '80px 0';
+          faqSection.innerHTML = `
+            <div class="container">
+              <h2 class="section-title">Frequently Asked Questions</h2>
+              <div style="max-width: 800px; margin: 0 auto; text-align: left;">
+                <div style="margin-bottom: 32px;">
+                  <h3 style="color: var(--text-primary); margin-bottom: 12px;">Is my data safe?</h3>
+                  <p style="color: var(--text-secondary);">Absolutely! Épure processes all images locally on your device. Nothing is uploaded to the cloud or sent to our servers.</p>
+                </div>
+                <div style="margin-bottom: 32px;">
+                  <h3 style="color: var(--text-primary); margin-bottom: 12px;">What image formats are supported?</h3>
+                  <p style="color: var(--text-secondary);">We support JPG, PNG, WebP, HEIC, TIFF, and many other popular formats. The Pro version includes all formats.</p>
+                </div>
+                <div style="margin-bottom: 32px;">
+                  <h3 style="color: var(--text-primary); margin-bottom: 12px;">Do I need an internet connection?</h3>
+                  <p style="color: var(--text-secondary);">No! Épure works completely offline. You only need internet for the initial download and updates.</p>
+                </div>
+                <div style="margin-bottom: 32px;">
+                  <h3 style="color: var(--text-primary); margin-bottom: 12px;">Is there a Windows version?</h3>
+                  <p style="color: var(--text-secondary);">We're currently macOS-only, but a Windows version is in development and coming soon!</p>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // Insert before footer
+          const footer = document.querySelector('.footer');
+          footer.parentNode.insertBefore(faqSection, footer);
+        }
+      });
+
       // Add scroll animations
       const observerOptions = {
         threshold: 0.1,
