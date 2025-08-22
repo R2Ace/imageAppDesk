@@ -1,80 +1,103 @@
-# Image Batch Processor
+# Épure - Image Processing App
 
-A desktop application built with Electron and Sharp.js for resizing, converting, and optimizing images in batch.
+A beautiful, minimalist image processing app for macOS that resizes and converts images locally.
 
-## Features
+## 🏗️ Project Structure
 
-- Drag and drop multiple images (JPG, PNG, WebP, HEIC)
-- Resize images by fixed width or percentage
-- Convert to various formats (JPG, PNG, WebP)
-- Adjust quality for better compression
-- Strip EXIF metadata for privacy
-- Save processed images to a specified output folder
-- Clean, modern UI with progress tracking
-
-## Tech Stack
-
-- Electron: Cross-platform desktop framework
-- Sharp.js: High-performance image processing library
-- HTML/CSS/JavaScript: For the user interface
-
-## Development Setup
-
-### Prerequisites
-
-- Node.js (version 14 or higher)
-- npm (comes with Node.js)
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/R2Ace/imageAppDesk.git
-   cd imageAppDesk
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-## Building for Production
-
-### Building for macOS
-
-```bash
-npm run build:mac
+```
+imageAppDesk/
+├── 📱 desktop-app/           # Electron Desktop Application
+│   ├── main.js              # Electron main process
+│   ├── renderer.js          # App UI logic
+│   ├── preload.js           # Secure IPC bridge
+│   ├── index.html           # App interface
+│   ├── styles.css           # App styling
+│   ├── build/               # Build configurations
+│   ├── assets/              # Icons and images
+│   └── dist/                # Built application output
+├── 🌐 website/              # Landing Page & Marketing Site
+│   ├── index.html           # Website homepage
+│   ├── css/                 # Website styles
+│   ├── js/                  # Website scripts
+│   └── images/              # Website assets
+├── 📄 docs/                 # Documentation
+│   ├── MVP_SETUP_GUIDE.md   # Development setup guide
+│   ├── MIXPANEL_SETUP.md    # Analytics configuration
+│   └── WEBPAGE_IMPROVEMENTS.md # Website enhancement notes
+└── package.json             # Workspace configuration
 ```
 
-### Building for Windows
+## 🚀 Quick Start
 
+### Desktop App (Electron)
 ```bash
-npm run build:win
+# Install dependencies and start desktop app
+npm run start
+
+# Development mode with hot reload
+npm run dev
+
+# Build DMG for distribution
+npm run build:dmg
 ```
 
-The packaged application will be available in the `dist` directory.
+### Website (Landing Page)
+```bash
+# Start website development server
+npm run website:start
 
-## Application Structure
+# Website will open at http://localhost:3000
+npm run website:dev
+```
 
-- `main.js`: Electron main process file
-- `preload.js`: Secure bridge between main and renderer processes
-- `index.html`: Application UI structure
-- `renderer.js`: UI logic and interactions
-- `styles.css`: Application styling
+### Workspace Commands
+```bash
+# Install all dependencies (root + desktop-app + website)
+npm run install:all
 
-## License
+# Clean all node_modules and build files
+npm run clean
+```
 
-MIT
+## 📱 Desktop App Features
 
-## Contributing
+- **Drag & Drop Interface** - Simple image processing
+- **Multiple Formats** - JPEG, PNG, WebP, HEIC, TIFF support
+- **Batch Processing** - Handle multiple images at once
+- **Preview Stage** - See images before processing
+- **Results Celebration** - Instant feedback with stats
+- **Privacy First** - All processing done locally
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## 🌐 Website Features
 
-## Support
+- **Professional Landing Page** - Modern, responsive design
+- **Dark/Light Mode** - User preference toggle
+- **Pricing Integration** - Ready for Stripe checkout
+- **FAQ Section** - Common user questions
+- **Mobile Responsive** - Works on all devices
 
-If you encounter any issues or need assistance, please open an issue on the repository.
+## 🔧 Development
+
+This is a **workspace project** with two main applications:
+
+1. **Desktop App** (`desktop-app/`) - Electron application
+2. **Website** (`website/`) - Static landing page
+
+Each has its own `package.json` and can be developed independently.
+
+## 📦 Building & Distribution
+
+- **Desktop App**: Builds to `desktop-app/dist/`
+- **Website**: Static files, no build process needed
+- **Code Signing**: Requires Apple Developer Account for distribution
+
+## 🎯 Current Status
+
+- ✅ **Desktop App**: Feature complete, security hardened
+- ✅ **Website**: Professional design, navigation complete
+- ⏳ **Business Setup**: Need Stripe integration for sales
+- ⏳ **Distribution**: Need Apple Developer account for signing
+
+---
+
+**Ready to launch!** Just need business infrastructure (Stripe + Apple Developer) to start selling.

@@ -1,119 +1,34 @@
 {
-  "name": "epure",
-  "productName": "Épure",
+  "name": "epure-workspace",
   "version": "1.0.0",
-  "description": "A minimalist image processing app for macOS",
-  "main": "main.js",
+  "description": "Épure - Image Processing App (Workspace)",
+  "private": true,
+  "workspaces": [
+    "desktop-app",
+    "website"
+  ],
   "scripts": {
-    "start": "electron .",
-    "dev": "cross-env NODE_ENV=development electron .",
-    "build": "electron-builder",
-    "build:mac": "electron-builder --mac",
-    "build:mas": "electron-builder --mac --publish never",
-    "build:dmg": "electron-builder --mac dmg --publish never",
-    "dist": "electron-builder --publish never",
-    "dist:mas": "electron-builder --mac mas --publish never"
+    "start": "cd desktop-app && npm start",
+    "dev": "cd desktop-app && npm run dev",
+    "build": "cd desktop-app && npm run build",
+    "build:mac": "cd desktop-app && npm run build:mac",
+    "build:dmg": "cd desktop-app && npm run build:dmg",
+    "website:start": "cd website && npm start",
+    "website:dev": "cd website && npm start",
+    "install:all": "npm install && cd desktop-app && npm install && cd ../website && npm install",
+    "clean": "rm -rf node_modules desktop-app/node_modules website/node_modules desktop-app/dist"
   },
   "keywords": [
     "electron",
-    "image",
-    "processing",
-    "sharp",
-    "resize",
-    "converter",
-    "macos"
+    "image-processing",
+    "desktop-app",
+    "workspace"
   ],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "electron-store": "^8.1.0",
-    "sharp": "^0.34.2",
-    "@sentry/electron": "^4.15.0",
-    "electron-updater": "^6.1.4",
-    "mixpanel": "^0.18.0",
-    "stripe": "^14.13.0",
-    "dotenv": "^16.3.1"
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.3",
-    "electron": "^28.0.0",
-    "electron-builder": "^26.0.12"
-  },
-  "build": {
-    "appId": "com.epure.app",
-    "productName": "Épure",
-    "directories": {
-      "output": "dist"
-    },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "R2Ace",
-        "repo": "imageAppDesk"
-      }
-    ],
-    "mac": {
-      "category": "public.app-category.graphics-design",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": ["x64", "arm64"]
-        },
-        {
-          "target": "zip",
-          "arch": ["x64", "arm64"]
-        }
-      ],
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "icon": "build/icon.icns",
-      "minimumSystemVersion": "10.15.0"
-    },
-    "mas": {
-      "category": "public.app-category.graphics-design", 
-      "hardenedRuntime": false,
-      "entitlements": "build/entitlements.mas.plist",
-      "entitlementsInherit": "build/entitlements.mas.inherit.plist",
-      "provisioningProfile": "build/embedded.provisionprofile"
-    },
-    "dmg": {
-      "title": "Épure",
-      "backgroundColor": "#f8fafc",
-      "window": {
-        "width": 540,
-        "height": 380
-      },
-      "contents": [
-        {
-          "x": 140,
-          "y": 200,
-          "type": "file"
-        },
-        {
-          "x": 400,
-          "y": 200,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ]
-    },
-    "files": [
-      "**/*",
-      "!.git{,/**}",
-      "!build/mas{,/**}",
-      "!**/*.md"
-    ],
-    "extraFiles": []
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/R2Ace/imageAppDesk.git"
-  },
-  "bugs": {
-    "url": "https://github.com/R2Ace/imageAppDesk/issues"
-  },
-  "homepage": "https://github.com/R2Ace/imageAppDesk#readme"
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
 }
