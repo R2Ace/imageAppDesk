@@ -2,26 +2,29 @@
   "name": "epure",
   "productName": "Épure",
   "version": "1.0.0",
-  "description": "A minimalist image processing app for macOS",
+  "description": "A minimalist image processing app for macOS and Windows",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dev": "cross-env NODE_ENV=development electron .",
     "build": "electron-builder",
     "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
     "build:mas": "electron-builder --mac --publish never",
     "build:dmg": "electron-builder --mac dmg --publish never",
     "dist": "electron-builder --publish never",
-    "dist:mas": "electron-builder --mac mas --publish never"
+    "dist:mas": "electron-builder --mac mas --publish never",
+    "dist:win": "electron-builder --win --publish never"
   },
-  "keywords": [
+      "keywords": [
     "electron",
     "image",
     "processing",
     "sharp",
     "resize",
     "converter",
-    "macos"
+    "macos",
+    "windows"
   ],
   "author": "",
   "license": "ISC",
@@ -78,6 +81,9 @@
       "entitlements": "build/entitlements.mas.plist",
       "entitlementsInherit": "build/entitlements.mas.inherit.plist",
       "provisioningProfile": "build/embedded.provisionprofile"
+    },
+    "win": {
+      "target": "nsis"
     },
     "dmg": {
       "title": "Épure",

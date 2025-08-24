@@ -187,7 +187,9 @@ class PaymentProcessor {
 const paymentProcessor = new PaymentProcessor();
 
 // Initialize with API key from environment
-const stripeKey = process.env.STRIPE_SECRET_KEY || 'your-stripe-secret-key-here';
+const stripeKey = process.env.NODE_ENV === 'production' 
+  ? process.env.STRIPE_SECRET_KEY 
+  : process.env.STRIPE_TEST_SECRET_KEY || 'your-stripe-secret-key-here';
 paymentProcessor.init(stripeKey);
 
 module.exports = paymentProcessor;
