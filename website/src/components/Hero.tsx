@@ -1,20 +1,42 @@
+import React from 'react'
 import { motion } from 'framer-motion'
 import { Download, Play, Star, Users } from 'lucide-react'
 import { Button } from './ui/button'
 import { fadeInUp, slideInFromLeft, slideInFromRight } from '../lib/utils'
 
 const Hero = () => {
-  const handleDownload = () => {
+  // Detect user's operating system
+  const getUserOS = () => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    if (userAgent.includes('mac')) return 'mac';
+    if (userAgent.includes('win')) return 'windows';
+    return 'mac'; // Default to Mac
+  };
+
+  const [userOS, setUserOS] = React.useState('mac');
+  
+  React.useEffect(() => {
+    setUserOS(getUserOS());
+  }, []);
+
+  const handleDownload = async () => {
     // Track download attempt
     import('../lib/mixpanel').then(({ trackEvent }) => {
       trackEvent('Download Button Clicked', {
         source: 'Hero Section',
-        price: 9
+        price: 9,
+        platform: userOS
       })
     })
     
-    // For now, show alert - replace with actual payment flow
-    alert('Payment integration coming soon! Contact support@epure.app to purchase.')
+    // Initiate payment flow
+    try {
+      const { initiatePayment } = await import('../lib/payment')
+      await initiatePayment()
+    } catch (error) {
+      console.error('Payment failed:', error)
+      alert('Payment system temporarily unavailable. Please contact support@epure.app')
+    }
   }
 
   const handleDemo = () => {
@@ -58,7 +80,7 @@ const Hero = () => {
               className="text-xl lg:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-2xl"
               variants={fadeInUp}
             >
-              The fastest, most private image converter for Mac. Convert, resize, and optimize 
+              The fastest, most private image converter for Mac and Windows. Convert, resize, and optimize 
               thousands of images with just a few clicks.
             </motion.p>
             
@@ -72,19 +94,20 @@ const Hero = () => {
                 size="xl" 
                 onClick={handleDownload}
                 className="group"
+                data-tour="download-button"
               >
                 <Download className="mr-2 h-5 w-5 group-hover:animate-bounce-subtle" />
-                Download for Mac $9
+                Download for {userOS === 'windows' ? 'Windows' : 'Mac'} $9
               </Button>
               
               <Button 
-                variant="hero" 
+                variant="secondary_premium" 
                 size="xl" 
                 onClick={handleDemo}
                 className="group"
               >
                 <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                Watch Demo
+                Try it Yourself
               </Button>
             </motion.div>
             

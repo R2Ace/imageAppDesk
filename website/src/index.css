@@ -13,7 +13,7 @@
   --secondary: 210 40% 98%; /* #f8fafc */
   --accent: 210 40% 98%; /* #f8fafc */
   --accent-foreground: 222 84% 15%; /* #1e293b */
-  --muted-foreground: 215 16% 47%;
+  --muted-foreground: 215 16% 65%;
   
   /* Gradients */
   --gradient-hero: linear-gradient(135deg, hsl(214 100% 97%), hsl(0 0% 100%));
@@ -76,7 +76,11 @@
 
   /* Text gradient effect */
   .text-gradient {
-    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+    background: rgba(0, 0, 0, 0) linear-gradient(to right, rgb(46, 137, 255), rgb(100, 150, 200)) repeat scroll 0% 0% / auto padding-box text;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
   }
 
   /* Floating background orbs */

@@ -280,10 +280,35 @@
                 </div>
 
                 <div class="settings-section">
+                    <h3>License & Account</h3>
+                    <div class="setting-row">
+                        <label>License Status</label>
+                        <div class="license-status" id="licenseStatus">
+                            <span class="status-indicator" id="statusIndicator">●</span>
+                            <span id="licenseText">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <label>License Key</label>
+                        <div class="license-input-group">
+                            <input type="text" id="licenseKeyInput" placeholder="EPURE-XXXXX-XXXXX">
+                            <button class="activate-btn" id="activateLicense">Activate</button>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <button class="secondary-btn" id="purchaseLicense">Purchase License ($9)</button>
+                        <button class="secondary-btn" id="contactSupport">Contact Support</button>
+                    </div>
+                    <div class="setting-row">
+                        <button class="secondary-btn" id="showHelpTour">Show App Tour</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
                     <h3>Advanced Options</h3>
                     <div class="setting-row">
                         <label class="checkbox-row">
-                            <input type="checkbox" id="stripMetadata" checked>
+                            <input type="checkbox" id="stripMetadata">
                             <span>Strip metadata from images</span>
                         </label>
                     </div>
@@ -304,6 +329,30 @@
             <div class="modal-footer">
                 <button class="secondary-btn" id="resetSettings">Reset to Defaults</button>
                 <button class="primary-btn" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Overlay -->
+    <div class="onboarding-overlay" id="onboardingOverlay" style="display: none;">
+        <div class="onboarding-backdrop"></div>
+        <div class="onboarding-tooltip" id="onboardingTooltip">
+            <div class="tooltip-header">
+                <div class="tooltip-progress">
+                    <span id="currentStep">1</span> of <span id="totalSteps">5</span>
+                </div>
+                <button class="close-onboarding" id="closeOnboarding">×</button>
+            </div>
+            <div class="tooltip-content">
+                <h3 id="tooltipTitle">Welcome to Épure!</h3>
+                <p id="tooltipDescription">Let's take a quick tour of the app to get you started.</p>
+            </div>
+            <div class="tooltip-navigation">
+                <button class="secondary-btn" id="skipTour">Skip Tour</button>
+                <div class="nav-buttons">
+                    <button class="secondary-btn" id="prevStep" disabled>Back</button>
+                    <button class="primary-btn" id="nextStep">Next</button>
+                </div>
             </div>
         </div>
     </div>

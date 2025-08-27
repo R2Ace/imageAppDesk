@@ -8,28 +8,28 @@ const Features = () => {
     {
       icon: Zap,
       title: "Lightning Fast Processing",
-      description: "Native Mac performance means instant processing. Convert 100+ images in seconds, not minutes. No uploading, no waiting for servers.",
+      description: "Native desktop performance means instant processing. Convert 100+ images in seconds, not minutes. No uploading, no waiting for servers.",
       gradient: "from-yellow-400 to-orange-500",
       stats: "3x faster than competitors"
     },
     {
       icon: Shield,
       title: "Complete Privacy",
-      description: "Your images never leave your Mac. Zero cloud uploads, zero data collection, zero privacy risks. Perfect for sensitive business content.",
+      description: "Your images never leave your computer. Zero cloud uploads, zero data collection, zero privacy risks. Perfect for sensitive business content.",
       gradient: "from-blue-400 to-purple-500",
       stats: "100% local processing"
     },
     {
       icon: DollarSign,
       title: "Simple Pricing",
-      description: "One-time purchase, lifetime access. Save $180+ per year vs. $24/month competitors. No subscriptions, no recurring fees, ever.",
+      description: "One-time purchase, lifetime access. No subscriptions, no recurring fees, ever. Unlike competitors who charge monthly.",
       gradient: "from-green-400 to-emerald-500",
       stats: "$9 one-time purchase"
     }
   ]
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
+    <section className="py-24 bg-white relative overflow-hidden" data-tour="features">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-glow opacity-30"></div>
       
@@ -126,7 +126,7 @@ const Features = () => {
                 </li>
                 <li className="flex items-center">
                   <span className="text-red-500 mr-3">❌</span>
-                  Pay $24+ per month ($288/year)
+                  Limited file formats & compression
                 </li>
                 <li className="flex items-center">
                   <span className="text-red-500 mr-3">❌</span>
@@ -139,7 +139,7 @@ const Features = () => {
             <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
               <h4 className="text-xl font-bold text-green-700 mb-4 flex items-center">
                 <span className="w-3 h-3 bg-green-500 rounded-full mr-3"></span>
-                Épure (Native Mac)
+                Épure (Native Desktop)
               </h4>
               <ul className="space-y-3 text-green-600">
                 <li className="flex items-center">
@@ -164,7 +164,7 @@ const Features = () => {
 
           <div className="text-center mt-8">
             <p className="text-lg font-semibold text-primary">
-              💡 The choice is clear: Native Mac performance wins every time
+              💡 The choice is clear: Native desktop performance wins every time
             </p>
           </div>
         </motion.div>

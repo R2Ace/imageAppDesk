@@ -32,7 +32,7 @@ let settings = {
     customHeight: 1080,
     quality: 80,
     outputDir: null,
-    stripMetadata: true,
+    stripMetadata: false,
     autoOpenOutput: true,
     overwriteFiles: false
 };
@@ -182,6 +182,12 @@ function setupEventListeners() {
         }
     });
 
+    // Help tour button
+    document.getElementById('showHelpTour').addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+        showOnboardingFromMenu();
+    });
+
     // Modal form elements
     stripMetadata.addEventListener('change', (e) => {
         settings.stripMetadata = e.target.checked;
@@ -231,7 +237,7 @@ function setupEventListeners() {
             preset: 'custom',
             customWidth: 1920,
             customHeight: 1080,
-            stripMetadata: true,
+            stripMetadata: false,
             autoOpenOutput: true,
             overwriteFiles: false,
             outputDir: ''
@@ -400,8 +406,17 @@ async function processImages(files) {
             settings
         });
 
-        // Show results
-        showResults(results, files.length);
+        // Show results - handle the response structure
+        if (results && results.success && Array.isArray(results.results)) {
+            showResults(results.results, files.length);
+        } else if (Array.isArray(results)) {
+            // Fallback for old format
+            showResults(results, files.length);
+        } else {
+            console.error('Results has unexpected structure:', results);
+            showNotification('Error: Invalid processing results', 'error');
+            resetToDropZone();
+        }
 
     } catch (error) {
         console.error('Error processing images:', error);
@@ -773,5 +788,202 @@ async function testLicenseActivation() {
     await activateLicenseKey(testLicense);
 }
 
+// Onboarding System
+const onboardingSteps = [
+    {
+        target: '#dropZone',
+        title: 'Welcome to Épure! 🎉',
+        description: 'Start by dropping your images here or click to browse files. We support JPG, PNG, WebP, HEIC, and TIFF formats.',
+        position: 'bottom'
+    },
+    {
+        target: '.format-selector',
+        title: 'Choose Your Format',
+        description: 'Select the output format for your images. JPG for photos, PNG for graphics with transparency, WebP for smallest file sizes.',
+        position: 'bottom'
+    },
+    {
+        target: '.size-selector',
+        title: 'Set Image Size',
+        description: 'Choose a preset size or use Custom to set your own dimensions. Perfect for social media, web, or print.',
+        position: 'bottom'
+    },
+    {
+        target: '.quality-control',
+        title: 'Adjust Quality',
+        description: 'Control the compression quality. Higher values mean better quality but larger files. 80% is usually perfect.',
+        position: 'bottom'
+    },
+    {
+        target: '#settingsBtn',
+        title: 'Advanced Settings',
+        description: 'Access advanced options like metadata stripping, output folder, and licensing from the settings panel.',
+        position: 'left'
+    }
+];
+
+let currentOnboardingStep = 0;
+let onboardingActive = false;
+
+// Onboarding DOM elements (will be initialized in init)
+let onboardingOverlay, onboardingTooltip, tooltipTitle, tooltipDescription;
+let currentStepSpan, totalStepsSpan, nextStepBtn, prevStepBtn, skipTourBtn, closeOnboardingBtn;
+
+function initOnboarding() {
+    // Get DOM elements
+    onboardingOverlay = document.getElementById('onboardingOverlay');
+    onboardingTooltip = document.getElementById('onboardingTooltip');
+    tooltipTitle = document.getElementById('tooltipTitle');
+    tooltipDescription = document.getElementById('tooltipDescription');
+    currentStepSpan = document.getElementById('currentStep');
+    totalStepsSpan = document.getElementById('totalSteps');
+    nextStepBtn = document.getElementById('nextStep');
+    prevStepBtn = document.getElementById('prevStep');
+    skipTourBtn = document.getElementById('skipTour');
+    closeOnboardingBtn = document.getElementById('closeOnboarding');
+    
+    // Set total steps
+    totalStepsSpan.textContent = onboardingSteps.length;
+    
+    // Event listeners
+    nextStepBtn.addEventListener('click', nextOnboardingStep);
+    prevStepBtn.addEventListener('click', prevOnboardingStep);
+    skipTourBtn.addEventListener('click', skipOnboarding);
+    closeOnboardingBtn.addEventListener('click', skipOnboarding);
+    
+    // Show onboarding if first time
+    const hasSeenOnboarding = localStorage.getItem('epure_onboarding_completed');
+    if (!hasSeenOnboarding) {
+        setTimeout(() => {
+            startOnboarding();
+        }, 1000); // Delay to let the app finish loading
+    }
+}
+
+function startOnboarding() {
+    onboardingActive = true;
+    currentOnboardingStep = 0;
+    onboardingOverlay.style.display = 'block';
+    showOnboardingStep(0);
+}
+
+function showOnboardingStep(stepIndex) {
+    const step = onboardingSteps[stepIndex];
+    const targetElement = document.querySelector(step.target);
+    
+    if (!targetElement) {
+        console.warn(`Onboarding target not found: ${step.target}`);
+        return;
+    }
+    
+    // Remove previous highlights
+    document.querySelectorAll('.onboarding-highlight').forEach(el => {
+        el.classList.remove('onboarding-highlight');
+    });
+    
+    // Highlight target element
+    targetElement.classList.add('onboarding-highlight');
+    
+    // Update tooltip content
+    tooltipTitle.textContent = step.title;
+    tooltipDescription.textContent = step.description;
+    currentStepSpan.textContent = stepIndex + 1;
+    
+    // Position tooltip
+    positionTooltip(targetElement, step.position);
+    
+    // Update navigation buttons
+    prevStepBtn.disabled = stepIndex === 0;
+    nextStepBtn.textContent = stepIndex === onboardingSteps.length - 1 ? 'Finish' : 'Next';
+}
+
+function positionTooltip(targetElement, position) {
+    const targetRect = targetElement.getBoundingClientRect();
+    const tooltipRect = onboardingTooltip.getBoundingClientRect();
+    
+    let left, top;
+    
+    switch (position) {
+        case 'bottom':
+            left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+            top = targetRect.bottom + 20;
+            break;
+        case 'top':
+            left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+            top = targetRect.top - tooltipRect.height - 20;
+            break;
+        case 'left':
+            left = targetRect.left - tooltipRect.width - 20;
+            top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+            break;
+        case 'right':
+            left = targetRect.right + 20;
+            top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+            break;
+        default:
+            left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+            top = targetRect.bottom + 20;
+    }
+    
+    // Keep tooltip within window bounds
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    if (left < 10) left = 10;
+    if (left + tooltipRect.width > windowWidth - 10) left = windowWidth - tooltipRect.width - 10;
+    if (top < 10) top = 10;
+    if (top + tooltipRect.height > windowHeight - 10) top = windowHeight - tooltipRect.height - 10;
+    
+    onboardingTooltip.style.left = left + 'px';
+    onboardingTooltip.style.top = top + 'px';
+}
+
+function nextOnboardingStep() {
+    if (currentOnboardingStep < onboardingSteps.length - 1) {
+        currentOnboardingStep++;
+        showOnboardingStep(currentOnboardingStep);
+    } else {
+        finishOnboarding();
+    }
+}
+
+function prevOnboardingStep() {
+    if (currentOnboardingStep > 0) {
+        currentOnboardingStep--;
+        showOnboardingStep(currentOnboardingStep);
+    }
+}
+
+function skipOnboarding() {
+    localStorage.setItem('epure_onboarding_completed', 'true');
+    hideOnboarding();
+}
+
+function finishOnboarding() {
+    localStorage.setItem('epure_onboarding_completed', 'true');
+    hideOnboarding();
+}
+
+function hideOnboarding() {
+    onboardingActive = false;
+    onboardingOverlay.style.display = 'none';
+    
+    // Remove highlights
+    document.querySelectorAll('.onboarding-highlight').forEach(el => {
+        el.classList.remove('onboarding-highlight');
+    });
+}
+
+// Add help button functionality to restart onboarding
+function showOnboardingFromMenu() {
+    localStorage.removeItem('epure_onboarding_completed');
+    startOnboarding();
+}
+
 // Initialize app
-init(); 
+init();
+
+// Initialize onboarding after DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    initOnboarding();
+}); 

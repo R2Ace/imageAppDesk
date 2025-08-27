@@ -22,7 +22,7 @@ const Footer = () => {
               <h3 className="text-3xl font-bold">Épure</h3>
             </div>
             <p className="text-xl text-white/80 max-w-2xl mx-auto">
-              The fastest, most private image converter for Mac users who demand quality.
+              The fastest, most private image converter for professionals who demand quality.
             </p>
           </div>
 
@@ -67,7 +67,7 @@ const Footer = () => {
             <div className="flex items-center gap-2">
               <span>Made with</span>
               <Heart className="w-4 h-4 text-red-400 fill-current" />
-              <span>for Mac users</span>
+              <span>for creative professionals</span>
             </div>
           </div>
         </motion.div>

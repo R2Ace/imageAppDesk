@@ -1,21 +1,44 @@
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Star } from 'lucide-react'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader } from './ui/card'
 import { fadeInUp } from '../lib/utils'
+import EmailSignup from './EmailSignup'
 
 const Pricing = () => {
-  const handlePurchase = () => {
+  // Detect user's operating system
+  const getUserOS = () => {
+    if (typeof window === 'undefined') return 'mac'
+    const userAgent = window.navigator.userAgent.toLowerCase()
+    if (userAgent.includes('win')) return 'windows'
+    return 'mac'
+  }
+  
+  const [userOS, setUserOS] = useState('mac')
+  
+  useEffect(() => {
+    setUserOS(getUserOS())
+  }, [])
+
+  const handlePurchase = async () => {
     // Track purchase attempt
     if (typeof window !== 'undefined' && (window as any).mixpanel) {
       (window as any).mixpanel.track('Purchase Button Clicked', {
         source: 'Pricing Section',
-        price: 9
+        price: 9,
+        platform: userOS
       })
     }
     
-    // For now, show alert - replace with actual payment flow
-    alert('Payment integration coming soon! Contact support@epure.app to purchase.')
+    // Initiate payment flow
+    try {
+      const { initiatePayment } = await import('../lib/payment')
+      await initiatePayment()
+    } catch (error) {
+      console.error('Payment failed:', error)
+      alert('Payment system temporarily unavailable. Please contact support@epure.app')
+    }
   }
 
   const features = [
@@ -30,7 +53,7 @@ const Pricing = () => {
   ]
 
   return (
-    <section className="py-24 bg-white">
+    <section className="py-24 bg-white" data-tour="pricing">
       <div className="container mx-auto px-6 lg:px-8">
         <motion.div
           className="text-center mb-16"
@@ -99,7 +122,7 @@ const Pricing = () => {
                   size="xl"
                   className="w-full text-xl py-6 group"
                 >
-                  Buy Once, Own Forever
+                  Get for {userOS === 'windows' ? 'Windows' : 'Mac'} - $9 Forever
                   <motion.div
                     className="ml-2"
                     animate={{ x: [0, 5, 0] }}
@@ -133,6 +156,17 @@ const Pricing = () => {
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Email Signup */}
+        <motion.div
+          className="mt-12 text-center"
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true }}
+        >
+          <EmailSignup />
         </motion.div>
 
         {/* Trust indicators */}

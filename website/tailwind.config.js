@@ -26,7 +26,7 @@ export default {
         },
         secondary: 'hsl(210 40% 98%)', // #f8fafc
         foreground: 'hsl(222 84% 15%)', // #1e293b
-        'muted-foreground': 'hsl(215 16% 47%)',
+        'muted-foreground': 'hsl(215 16% 65%)',
       },
       backgroundImage: {
         'gradient-hero': 'linear-gradient(135deg, hsl(214 100% 97%), hsl(0 0% 100%))',
