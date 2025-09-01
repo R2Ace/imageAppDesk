@@ -108,14 +108,14 @@ class EmailService {
         <h3>💬 Need Help?</h3>
         <p>If you have any questions or need assistance:</p>
         <ul>
-            <li>📧 Email us: <a href="mailto:support@epure.app">support@epure.app</a></li>
+            <li>📧 Email us: <a href="mailto:r2thedev@gmail.com">r2thedev@gmail.com</a></li>
             <li>🌐 Visit: <a href="${websiteUrl}">${websiteUrl}</a></li>
         </ul>
 
         <div class="footer">
             <p>Thanks for choosing Épure!</p>
             <p>This email was sent because you purchased a license for Épure.<br>
-            If you didn't make this purchase, please contact <a href="mailto:support@epure.app">support@epure.app</a></p>
+            If you didn't make this purchase, please contact <a href="mailto:r2thedev@gmail.com">r2thedev@gmail.com</a></p>
         </div>
     </div>
 </body>
@@ -139,7 +139,7 @@ Quick Setup:
 4. Enter your license key: ${licenseKey}
 5. Start converting images!
 
-Need help? Email us at support@epure.app
+Need help? Email us at r2thedev@gmail.com
 
 Thanks for choosing Épure!
 `;

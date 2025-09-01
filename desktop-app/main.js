@@ -14,7 +14,7 @@ global.analytics = analytics;
 // Initialize payment processor
 const paymentProcessor = require('./config/stripe');
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
@@ -91,8 +91,112 @@ function getUniqueFilename(outputPath, overwrite = false) {
   return newPath;
 }
 
+// Create application menu
+function createMenu() {
+  const template = [
+    {
+      label: 'Épure',
+      submenu: [
+        {
+          label: 'About Épure',
+          role: 'about'
+        },
+        { type: 'separator' },
+        {
+          label: 'Send Feedback',
+          click: () => {
+            shell.openExternal('mailto:r2thedev@gmail.com?subject=Épure Feedback&body=Hi! I have some feedback about Épure:\n\n');
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Hide Épure',
+          accelerator: 'Command+H',
+          role: 'hide'
+        },
+        {
+          label: 'Hide Others',
+          accelerator: 'Command+Shift+H',
+          role: 'hideothers'
+        },
+        {
+          label: 'Show All',
+          role: 'unhide'
+        },
+        { type: 'separator' },
+        {
+          label: 'Quit',
+          accelerator: 'Command+Q',
+          click: () => app.quit()
+        }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        {
+          label: 'Undo',
+          accelerator: 'CmdOrCtrl+Z',
+          role: 'undo'
+        },
+        {
+          label: 'Redo',
+          accelerator: 'Shift+CmdOrCtrl+Z',
+          role: 'redo'
+        },
+        { type: 'separator' },
+        {
+          label: 'Cut',
+          accelerator: 'CmdOrCtrl+X',
+          role: 'cut'
+        },
+        {
+          label: 'Copy',
+          accelerator: 'CmdOrCtrl+C',
+          role: 'copy'
+        },
+        {
+          label: 'Paste',
+          accelerator: 'CmdOrCtrl+V',
+          role: 'paste'
+        }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        {
+          label: 'Minimize',
+          accelerator: 'CmdOrCtrl+M',
+          role: 'minimize'
+        },
+        {
+          label: 'Close',
+          accelerator: 'CmdOrCtrl+W',
+          role: 'close'
+        }
+      ]
+    },
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'Contact Support',
+          click: () => {
+            shell.openExternal('mailto:r2thedev@gmail.com?subject=Épure Support Request&body=Hi! I need help with Épure:\n\n');
+          }
+        }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
 app.whenReady().then(() => {
   createWindow();
+  createMenu();
 
   // Track app launch
   analytics.trackAppLaunched();

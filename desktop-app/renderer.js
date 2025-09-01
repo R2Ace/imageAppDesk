@@ -980,10 +980,8 @@ function showOnboardingFromMenu() {
     startOnboarding();
 }
 
-// Initialize app
-init();
-
-// Initialize onboarding after DOM is ready
+// Initialize app after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    init();
     initOnboarding();
 }); 

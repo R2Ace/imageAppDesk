@@ -29,7 +29,7 @@ const Footer = () => {
           {/* Links */}
           <div className="flex flex-wrap justify-center gap-8 text-white/70">
             <a 
-              href="mailto:support@epure.app" 
+              href="mailto:r2thedev@gmail.com" 
               className="flex items-center gap-2 hover:text-white transition-colors"
             >
               <Mail className="w-4 h-4" />

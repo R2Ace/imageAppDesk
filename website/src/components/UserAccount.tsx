@@ -213,7 +213,7 @@ const UserAccount: React.FC<UserAccountProps> = ({ isOpen, onClose }) => {
                   <Button 
                     variant="outline" 
                     className="w-full justify-start"
-                    onClick={() => window.open('mailto:support@epure.app', '_blank')}
+                    onClick={() => window.open('mailto:r2thedev@gmail.com', '_blank')}
                   >
                     <Mail className="mr-2 h-4 w-4" />
                     Contact Support

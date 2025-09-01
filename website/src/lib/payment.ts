@@ -6,10 +6,10 @@ export interface PaymentConfig {
   amount: number;
 }
 
-// Stripe configuration - update with your actual keys
+// Stripe configuration - uses environment variables only
 const config: PaymentConfig = {
-  stripePublishableKey: process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here',
-  priceId: process.env.REACT_APP_STRIPE_PRICE_ID || 'price_your_price_id_here',
+  stripePublishableKey: process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || '',
+  priceId: process.env.REACT_APP_STRIPE_PRICE_ID || '',
   productName: 'Épure - Image Converter',
   amount: 9.00
 };
@@ -37,7 +37,7 @@ export const initiatePayment = async () => {
       `User Agent: ${navigator.userAgent}`
     );
     
-    window.open(`mailto:support@epure.app?subject=${subject}&body=${body}`, '_blank');
+    window.open(`mailto:r2thedev@gmail.com?subject=${subject}&body=${body}`, '_blank');
     
     // Show user-friendly message
     alert(

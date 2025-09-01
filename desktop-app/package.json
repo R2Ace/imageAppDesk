@@ -83,7 +83,8 @@
       "provisioningProfile": "build/embedded.provisionprofile"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.icns"
     },
     "dmg": {
       "title": "Épure",

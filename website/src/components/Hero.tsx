@@ -35,7 +35,7 @@ const Hero = () => {
       await initiatePayment()
     } catch (error) {
       console.error('Payment failed:', error)
-      alert('Payment system temporarily unavailable. Please contact support@epure.app')
+      alert('Payment system temporarily unavailable. Please contact r2thedev@gmail.com')
     }
   }
 
