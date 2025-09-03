@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader } from './ui/card';
-import { User, Download, Mail, Key, Settings, X } from 'lucide-react';
+import { User, Download, Mail, Key, X } from 'lucide-react';
 
 interface UserAccountProps {
   isOpen: boolean;

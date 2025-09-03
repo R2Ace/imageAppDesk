@@ -8,8 +8,8 @@ export interface PaymentConfig {
 
 // Stripe configuration - uses environment variables only
 const config: PaymentConfig = {
-  stripePublishableKey: process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || '',
-  priceId: process.env.REACT_APP_STRIPE_PRICE_ID || '',
+  stripePublishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
+  priceId: import.meta.env.VITE_STRIPE_PRICE_ID || '',
   productName: 'Épure - Image Converter',
   amount: 9.00
 };

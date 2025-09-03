@@ -45,6 +45,34 @@ body {
   border-bottom: 1px solid rgba(226, 232, 240, 0.5);
 }
 
+/* Feedback Section Styles */
+.feedback-section {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(107, 114, 128, 0.1);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
+}
+
+.feedback-btn:hover {
+  background: rgba(107, 114, 128, 0.15);
+  border-color: rgba(107, 114, 128, 0.3);
+  color: var(--text-color);
+}
+
 .titlebar-drag-region {
   flex: 1;
 }

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Zap, FileImage, Upload, AlertTriangle, Crown } from 'lucide-react'
+import { CheckCircle, FileImage, Upload, AlertTriangle, Crown } from 'lucide-react'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 import { fadeInUp, formatFileSize, generateRandomFileSize } from '../lib/utils'
@@ -74,35 +74,7 @@ const InteractiveDemo = () => {
     }))
   }
 
-  const startDemo = useCallback(async () => {
-    // Track demo interaction
-    if (typeof window !== 'undefined' && (window as any).mixpanel) {
-      (window as any).mixpanel.track('Interactive Demo Started', {
-        source: 'Demo Section'
-      })
-    }
 
-    setIsProcessing(true)
-    setFiles([])
-    setTotalSaved(0)
-
-    const demoFiles = [
-      createDemoFile('vacation-photo.heic'),
-      createDemoFile('presentation-slide.png'),
-      createDemoFile('product-image.jpg'),
-      createDemoFile('team-photo.tiff')
-    ]
-
-    setFiles(demoFiles)
-
-    // Process files one by one with slight delays
-    for (let i = 0; i < demoFiles.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      processFile(demoFiles[i].id)
-    }
-
-    setIsProcessing(false)
-  }, [])
 
   const resetDemo = () => {
     setFiles([])

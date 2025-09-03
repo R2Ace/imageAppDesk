@@ -984,4 +984,12 @@ function showOnboardingFromMenu() {
 document.addEventListener('DOMContentLoaded', () => {
     init();
     initOnboarding();
+    
+    // Add feedback button functionality
+    const feedbackBtn = document.getElementById('feedbackBtn');
+    if (feedbackBtn) {
+        feedbackBtn.addEventListener('click', () => {
+            window.electronAPI.openExternal('mailto:r2thedev@gmail.com?subject=Épure Feedback&body=Hi! I have some feedback about Épure:\n\n');
+        });
+    }
 }); 
