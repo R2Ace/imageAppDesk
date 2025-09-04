@@ -5,18 +5,20 @@
   "private": true,
   "workspaces": [
     "desktop-app",
-    "website"
+    "website",
+    "webhook-server"
   ],
   "scripts": {
     "start": "cd webhook-server && npm start",
-    "dev": "cd desktop-app && npm run dev",
-    "build": "cd webhook-server && echo 'Webhook server ready'",
-    "build:mac": "cd desktop-app && npm run build:mac",
-    "build:dmg": "cd desktop-app && npm run build:dmg",
+    "dev": "cd webhook-server && npm run dev",
+    "build": "cd webhook-server && npm ci --production",
+    "postinstall": "cd webhook-server && npm install",
+    "desktop:dev": "cd desktop-app && npm run dev",
+    "desktop:build": "cd desktop-app && npm run build",
     "website:start": "cd website && npm start",
     "website:dev": "cd website && npm start",
-    "install:all": "npm install && cd desktop-app && npm install && cd ../website && npm install",
-    "clean": "rm -rf node_modules desktop-app/node_modules website/node_modules desktop-app/dist"
+    "install:all": "npm install && cd desktop-app && npm install && cd ../website && npm install && cd ../webhook-server && npm install",
+    "clean": "rm -rf node_modules desktop-app/node_modules website/node_modules webhook-server/node_modules desktop-app/dist"
   },
   "keywords": [
     "electron",

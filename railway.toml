@@ -1,9 +1,0 @@
-[build]
-buildCommand = "npm ci"
-workingDirectory = "webhook-server"
-
-[deploy]
-startCommand = "npm start"
-workingDirectory = "webhook-server"
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3

@@ -1,8 +1,0 @@
-[phases.install]
-cmd = "cd webhook-server && npm ci"
-
-[phases.build]
-cmd = "cd webhook-server && echo 'Webhook server ready'"
-
-[start]
-cmd = "cd webhook-server && npm start"
