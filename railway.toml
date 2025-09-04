@@ -1,0 +1,10 @@
+[build]
+buildCommand = "cd webhook-server && npm ci"
+
+[deploy]
+startCommand = "cd webhook-server && npm start"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[environment]
+NODE_ENV = "production"

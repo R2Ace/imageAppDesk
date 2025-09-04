@@ -8,9 +8,9 @@
     "website"
   ],
   "scripts": {
-    "start": "cd desktop-app && npm start",
+    "start": "cd webhook-server && npm start",
     "dev": "cd desktop-app && npm run dev",
-    "build": "cd desktop-app && npm run build",
+    "build": "cd webhook-server && echo 'Webhook server ready'",
     "build:mac": "cd desktop-app && npm run build:mac",
     "build:dmg": "cd desktop-app && npm run build:dmg",
     "website:start": "cd website && npm start",
