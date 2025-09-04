@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Download, Sparkles, User, HelpCircle } from 'lucide-react'
+import { Download, Sparkles, User } from 'lucide-react'
 import { Button } from './ui/button'
 import UserAccount from './UserAccount'
 
@@ -54,11 +54,7 @@ const StickyDownloadBar = () => {
     }
   }
 
-  const showOnboardingGuide = () => {
-    // Clear the completion flag and dispatch a custom event to trigger the guide
-    localStorage.removeItem('epure_onboarding_completed')
-    window.dispatchEvent(new CustomEvent('showOnboarding'))
-  }
+
 
   return (
     <AnimatePresence>
@@ -106,15 +102,6 @@ const StickyDownloadBar = () => {
                     <span>No Subscriptions</span>
                   </div>
                 </div>
-                
-                <Button 
-                  onClick={showOnboardingGuide}
-                  variant="ghost"
-                  size="sm"
-                  title="Take a quick tour"
-                >
-                  <HelpCircle className="h-4 w-4" />
-                </Button>
                 
                 <Button 
                   onClick={() => setShowUserAccount(true)}

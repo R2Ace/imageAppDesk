@@ -116,29 +116,8 @@ const Hero = () => {
               className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 text-muted-foreground"
               variants={fadeInUp}
             >
-              <div className="flex items-center gap-2">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <span className="text-sm font-medium">4.9/5 rating</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                <span className="text-sm font-medium">1,200+ happy users</span>
-              </div>
-              
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="w-8 h-8 rounded-full bg-gradient-primary border-2 border-white flex items-center justify-center text-white text-xs font-bold"
-                  >
-                    {String.fromCharCode(65 + i)}
-                  </div>
-                ))}
+              <div className="text-center lg:text-left">
+                <span className="text-sm font-medium">Native Mac performance • Complete privacy • One-time purchase</span>
               </div>
             </motion.div>
           </motion.div>

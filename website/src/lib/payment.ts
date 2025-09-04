@@ -16,9 +16,6 @@ const config: PaymentConfig = {
 
 export const initiatePayment = async () => {
   try {
-    // For now, direct to a temporary checkout
-    // In production, this would create a Stripe Checkout session
-    
     // Track payment attempt
     import('./mixpanel').then(({ trackEvent }) => {
       trackEvent('Payment Initiated', {
@@ -28,26 +25,33 @@ export const initiatePayment = async () => {
       });
     });
 
-    // Temporary solution: Open mailto for manual processing
-    const subject = encodeURIComponent('Épure Purchase Request');
-    const body = encodeURIComponent(
-      `Hi! I'd like to purchase Épure for $${config.amount}.\n\n` +
-      `Please send me payment instructions and download link.\n\n` +
-      `Platform: ${navigator.platform}\n` +
-      `User Agent: ${navigator.userAgent}`
-    );
-    
-    window.open(`mailto:r2thedev@gmail.com?subject=${subject}&body=${body}`, '_blank');
-    
-    // Show user-friendly message
-    alert(
-      `We're setting up automated payments! 🚀\n\n` +
-      `For now, we've opened your email client.\n` +
-      `We'll send you payment instructions and your download link within 24 hours.\n\n` +
-      `Thank you for your interest in Épure!`
-    );
+    // Create direct Stripe checkout session
+    const response = await fetch('https://epure-webhook-production.up.railway.app/api/create-checkout-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        priceId: config.priceId || 'price_1OXf4JA8Xjc7tVUm9K8j1234', // Your Stripe price ID
+        productName: config.productName,
+        successUrl: window.location.origin + '/success',
+        cancelUrl: window.location.origin + '/cancel'
+      }),
+    });
 
-    return { success: true, method: 'email' };
+    if (!response.ok) {
+      throw new Error('Failed to create checkout session');
+    }
+
+    const session = await response.json();
+    
+    if (session.url) {
+      // Redirect to Stripe Checkout
+      window.location.href = session.url;
+      return { success: true, method: 'stripe' };
+    } else {
+      throw new Error('No checkout URL received');
+    }
     
   } catch (error) {
     console.error('Payment initiation failed:', error);
@@ -59,6 +63,9 @@ export const initiatePayment = async () => {
         source: 'website'
       });
     });
+    
+    // Fallback to email if Stripe fails
+    alert('Payment system temporarily unavailable. Please contact r2thedev@gmail.com to purchase Épure for $9.');
     
     throw error;
   }

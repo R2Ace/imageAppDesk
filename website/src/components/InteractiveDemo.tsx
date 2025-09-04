@@ -96,6 +96,8 @@ const InteractiveDemo = () => {
     }
   }
 
+
+
   const handleUpgradeClick = () => {
     // Track upgrade click
     if (typeof window !== 'undefined' && (window as any).mixpanel) {
@@ -460,16 +462,20 @@ const InteractiveDemo = () => {
                         <Button
                           onClick={startProcessingWithSettings}
                           variant="premium"
-                          className="flex-1"
+                          className="flex-1 cursor-pointer"
+                          disabled={isProcessing}
                         >
-                          Start Processing ({files.length} files)
+                          {isProcessing ? 'Processing...' : `Start Processing (${files.length} files)`}
                         </Button>
                         <Button
                           onClick={() => {
                             setShowSettings(false)
                             setFiles([])
+                            resetDemo()
                           }}
                           variant="outline"
+                          className="cursor-pointer"
+                          disabled={isProcessing}
                         >
                           Cancel
                         </Button>

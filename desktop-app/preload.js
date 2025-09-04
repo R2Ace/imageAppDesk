@@ -42,5 +42,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createPayment: (customerEmail) => ipcRenderer.invoke('create-payment', customerEmail),
   verifyPayment: (paymentIntentId) => ipcRenderer.invoke('verify-payment', paymentIntentId),
   activateLicense: (licenseKey) => ipcRenderer.invoke('activate-license', licenseKey),
-  openPaymentUrl: (url) => ipcRenderer.invoke('open-payment-url', url)
+  openPaymentUrl: (url) => ipcRenderer.invoke('open-payment-url', url),
+  
+  // External links
+  openExternal: (url) => ipcRenderer.invoke('open-external', url)
 }); 

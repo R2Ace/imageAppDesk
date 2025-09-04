@@ -137,21 +137,14 @@ const Pricing = () => {
                 </p>
               </div>
 
-              {/* Social Proof */}
+              {/* Value Proposition */}
               <div className="pt-6 border-t border-gray-200">
                 <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                    <span>4.9/5</span>
-                  </div>
+                  <span>Native Mac performance</span>
                   <span>•</span>
-                  <span>1,200+ happy users</span>
+                  <span>Complete privacy</span>
                   <span>•</span>
-                  <span>Mac App Store quality</span>
+                  <span>One-time purchase</span>
                 </div>
               </div>
             </CardContent>

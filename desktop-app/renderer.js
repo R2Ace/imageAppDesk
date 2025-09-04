@@ -884,6 +884,13 @@ function showOnboardingStep(stepIndex) {
     // Highlight target element
     targetElement.classList.add('onboarding-highlight');
     
+    // Scroll to the target element smoothly for better UX
+    targetElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'center'
+    });
+    
     // Update tooltip content
     tooltipTitle.textContent = step.title;
     tooltipDescription.textContent = step.description;

@@ -533,6 +533,17 @@ app.whenReady().then(() => {
       return { success: false, error: error.message };
     }
   });
+
+  // Handle opening external URLs (for feedback, support, etc.)
+  ipcMain.handle('open-external', async (_, url) => {
+    try {
+      await shell.openExternal(url);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to open external URL:', error);
+      return { success: false, error: error.message };
+    }
+  });
 });
 
 app.on('window-all-closed', () => {

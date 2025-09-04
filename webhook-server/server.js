@@ -122,6 +122,41 @@ app.get('/api/licenses/:email', async (req, res) => {
   }
 });
 
+// Create Stripe Checkout Session
+app.post('/api/create-checkout-session', async (req, res) => {
+  try {
+    const { successUrl, cancelUrl } = req.body;
+    
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Épure - Image Converter',
+              description: 'Professional image processing app for Mac and Windows',
+            },
+            unit_amount: 900, // $9.00 in cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: successUrl || 'https://epure-jrgzo2soz-r2aces-projects.vercel.app/success',
+      cancel_url: cancelUrl || 'https://epure-jrgzo2soz-r2aces-projects.vercel.app/',
+      metadata: {
+        product: 'epure_license'
+      }
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Error creating checkout session:', error);
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
 // Stripe webhook endpoint
 app.post('/webhook', async (req, res) => {
   const sig = req.headers['stripe-signature'];
