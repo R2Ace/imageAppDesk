@@ -57,8 +57,8 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
 
-  // Only open dev tools in development mode
-  if (process.env.NODE_ENV === 'development') {
+  // Only open dev tools in development mode and when explicitly enabled
+  if (process.env.NODE_ENV === 'development' && process.env.ENABLE_DEV_TOOLS === 'true') {
     mainWindow.webContents.openDevTools();
   }
 }

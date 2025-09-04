@@ -115,6 +115,12 @@ async function saveSettingsToStorage() {
 
 // Setup event listeners
 function setupEventListeners() {
+    // Ensure all elements are available
+    if (!dropZone || !fileInput) {
+        console.error('Required elements not found during setup');
+        return;
+    }
+    
     // Drop zone
     dropZone.addEventListener('click', () => fileInput.click());
     dropZone.addEventListener('dragover', handleDragOver);
@@ -266,7 +272,19 @@ function setupEventListeners() {
     // Preview stage actions
     startProcessingBtn.addEventListener('click', () => {
         if (pendingFiles.length > 0) {
-            processImages(pendingFiles);
+            const conversions = getConversionSettings();
+            
+            if (conversions.length === 0) {
+                showNotification('Please select output format for at least one image', 'warning');
+                return;
+            }
+            
+            if (conversions.length < pendingFiles.length) {
+                const unselected = pendingFiles.length - conversions.length;
+                showNotification(`${unselected} image(s) will be skipped (no format selected)`, 'warning');
+            }
+            
+            processImagesWithConversions(pendingFiles, conversions);
         }
     });
 
@@ -274,28 +292,45 @@ function setupEventListeners() {
         resetToDropZone();
     });
 
-    // Results popup actions
-    viewDetailsBtn.addEventListener('click', () => {
-        resultsPopup.style.display = 'none';
-        // The detailed results dashboard is already visible
-    });
+    // Results popup actions (with null checks)
+    if (viewDetailsBtn) {
+        viewDetailsBtn.addEventListener('click', () => {
+            if (resultsPopup) {
+                resultsPopup.style.display = 'none';
+                // Show detailed results dashboard
+                if (resultsDashboard) resultsDashboard.style.display = 'block';
+            }
+        });
+    }
 
-    openFolderPopupBtn.addEventListener('click', () => {
-        if (settings.outputDir) {
-            window.electronAPI.openFolder(settings.outputDir);
-        }
-    });
+    if (openFolderPopupBtn) {
+        openFolderPopupBtn.addEventListener('click', () => {
+            if (settings.outputDir) {
+                window.electronAPI.openFolder(settings.outputDir);
+            }
+        });
+    }
 
-    closeResultsPopupBtn.addEventListener('click', () => {
-        resultsPopup.style.display = 'none';
-    });
+    if (closeResultsPopupBtn) {
+        closeResultsPopupBtn.addEventListener('click', () => {
+            if (resultsPopup) {
+                resultsPopup.style.display = 'none';
+                // User chose to close without viewing details - go back to drop zone
+                resetToDropZone();
+            }
+        });
+    }
 
     // Click outside popup to close
-    resultsPopup.addEventListener('click', (e) => {
-        if (e.target === resultsPopup) {
-            resultsPopup.style.display = 'none';
-        }
-    });
+    if (resultsPopup) {
+        resultsPopup.addEventListener('click', (e) => {
+            if (e.target === resultsPopup) {
+                resultsPopup.style.display = 'none';
+                // User clicked outside - go back to drop zone
+                resetToDropZone();
+            }
+        });
+    }
 }
 
 // Drag and drop handlers
@@ -313,20 +348,89 @@ function handleDragLeave(e) {
 function handleDrop(e) {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
-    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-    if (files.length > 0) {
-        showPreviewStage(files);
+    
+    // Enhanced file validation
+    const allFiles = Array.from(e.dataTransfer.files);
+    const validFiles = [];
+    const invalidFiles = [];
+    
+    // Supported image MIME types
+    const supportedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 
+        'image/heic', 'image/heif', 'image/tiff', 'image/tif'
+    ];
+    
+    allFiles.forEach(file => {
+        // Check by MIME type and extension
+        const isValidMime = file.type && supportedTypes.includes(file.type.toLowerCase());
+        const extension = file.name.split('.').pop()?.toLowerCase();
+        const isValidExtension = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'tiff', 'tif'].includes(extension);
+        
+        // File size check (max 200MB)
+        const isValidSize = file.size <= 200 * 1024 * 1024;
+        
+        if ((isValidMime || isValidExtension) && isValidSize) {
+            validFiles.push(file);
+        } else {
+            invalidFiles.push({file, reason: !isValidSize ? 'too large' : 'unsupported format'});
+        }
+    });
+    
+    // Show warnings for invalid files
+    if (invalidFiles.length > 0) {
+        const reasons = invalidFiles.map(({file, reason}) => `${file.name} (${reason})`).join(', ');
+        showNotification(`Skipped ${invalidFiles.length} file(s): ${reasons}`, 'warning');
+    }
+    
+    if (validFiles.length > 0) {
+        showPreviewStage(validFiles);
+    } else if (allFiles.length > 0) {
+        showNotification('No valid image files found. Please use JPG, PNG, WebP, HEIC, or TIFF files under 200MB.', 'error');
     }
 }
 
 function handleFileSelect(e) {
-    const files = Array.from(e.target.files).filter(file => file.type.startsWith('image/'));
-    if (files.length > 0) {
-        showPreviewStage(files);
+    // Use the same enhanced validation as drag/drop
+    const allFiles = Array.from(e.target.files);
+    const validFiles = [];
+    const invalidFiles = [];
+    
+    // Supported image MIME types
+    const supportedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 
+        'image/heic', 'image/heif', 'image/tiff', 'image/tif'
+    ];
+    
+    allFiles.forEach(file => {
+        // Check by MIME type and extension
+        const isValidMime = file.type && supportedTypes.includes(file.type.toLowerCase());
+        const extension = file.name.split('.').pop()?.toLowerCase();
+        const isValidExtension = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'tiff', 'tif'].includes(extension);
+        
+        // File size check (max 200MB)
+        const isValidSize = file.size <= 200 * 1024 * 1024;
+        
+        if ((isValidMime || isValidExtension) && isValidSize) {
+            validFiles.push(file);
+        } else {
+            invalidFiles.push({file, reason: !isValidSize ? 'too large' : 'unsupported format'});
+        }
+    });
+    
+    // Show warnings for invalid files
+    if (invalidFiles.length > 0) {
+        const reasons = invalidFiles.map(({file, reason}) => `${file.name} (${reason})`).join(', ');
+        showNotification(`Skipped ${invalidFiles.length} file(s): ${reasons}`, 'warning');
+    }
+    
+    if (validFiles.length > 0) {
+        showPreviewStage(validFiles);
+    } else if (allFiles.length > 0) {
+        showNotification('No valid image files found. Please use JPG, PNG, WebP, HEIC, or TIFF files under 200MB.', 'error');
     }
 }
 
-// Show preview stage
+// Show preview stage with conversion options
 function showPreviewStage(files) {
     pendingFiles = files;
     
@@ -336,46 +440,172 @@ function showPreviewStage(files) {
     processingState.style.display = 'none';
     resultsDashboard.style.display = 'none';
 
-    // Clear previous file list
-    fileList.innerHTML = '';
+    // Clear previous conversion list
+    const conversionList = document.getElementById('conversionList');
+    if (conversionList) {
+        conversionList.innerHTML = '';
+    }
 
-    // Calculate total size
-    let totalBytes = 0;
-    
-    // Populate file list with image previews
-    files.forEach(file => {
-        totalBytes += file.size;
-        
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
-        
+    // Create conversion items for each file
+    files.forEach((file, index) => {
         const fileExt = file.name.split('.').pop().toUpperCase();
-        
-        // Create object URL for image preview
         const imageUrl = URL.createObjectURL(file);
         
-        fileItem.innerHTML = `
-            <div class="file-info">
-                <div class="file-preview">
+        const conversionItem = document.createElement('div');
+        conversionItem.className = 'conversion-item';
+        conversionItem.dataset.fileIndex = index;
+        
+        conversionItem.innerHTML = `
+            <div class="conversion-preview">
+                <div class="image-preview">
                     <img src="${imageUrl}" alt="${file.name}" onerror="this.style.display='none'; this.parentNode.innerHTML='📷';">
                 </div>
-                <div class="file-details">
-                    <h4>${file.name}</h4>
-                    <p>${formatFileSize(file.size)} • ${fileExt}</p>
+                <div class="image-info">
+                    <div class="image-details">${formatFileSize(file.size)} • ${fileExt}</div>
+                </div>
+            </div>
+            <div class="conversion-arrow">
+                <div class="arrow-content">
+                    <span class="arrow-icon">→</span>
+                    <span class="arrow-label">Convert</span>
+                </div>
+            </div>
+            <div class="format-controls">
+                <select class="format-select" data-file-index="${index}">
+                    <option value="">Choose format...</option>
+                    <option value="jpeg">JPEG</option>
+                    <option value="png">PNG</option>
+                    <option value="webp">WebP</option>
+                    <option value="avif">AVIF</option>
+                </select>
+                <div class="quality-control-mini">
+                    <input type="range" min="1" max="100" value="80" class="quality-slider" data-file-index="${index}">
+                    <span class="quality-value-mini">80%</span>
                 </div>
             </div>
         `;
         
-        fileList.appendChild(fileItem);
+        if (conversionList) {
+            conversionList.appendChild(conversionItem);
+        }
     });
 
-    // Update summary
-    fileCount.textContent = files.length;
-    totalSize.textContent = formatFileSize(totalBytes);
-    outputFormat.textContent = settings.format.toUpperCase();
+    // Update conversion count
+    updateConversionCount();
+    
+    // Setup global controls
+    setupGlobalControls();
 }
 
-// Process images
+// Process images with individual conversion settings
+async function processImagesWithConversions(files, conversions) {
+    processStartTime = Date.now();
+    
+    // Hide drop zone and show processing
+    dropZone.style.display = 'none';
+    filePreviewStage.style.display = 'none';
+    processingState.style.display = 'block';
+    resultsDashboard.style.display = 'none';
+
+    // Reset progress
+    progressFill.style.width = '0%';
+    processedCount.textContent = '0';
+    totalCount.textContent = conversions.length;
+
+    try {
+        // Convert only selected files with their individual settings
+        const selectedFiles = [];
+        const fileSettings = [];
+        
+        conversions.forEach(conv => {
+            const file = files[conv.fileIndex];
+            if (file) {
+                selectedFiles.push(file);
+                fileSettings.push({
+                    format: conv.format,
+                    quality: conv.quality,
+                    preset: 'custom',
+                    customWidth: settings.customWidth,
+                    customHeight: settings.customHeight,
+                    stripMetadata: settings.stripMetadata,
+                    autoOpenOutput: settings.autoOpenOutput,
+                    overwriteFiles: settings.overwriteFiles
+                });
+            }
+        });
+
+        // Convert files to the format expected by main process
+        const fileData = await Promise.all(selectedFiles.map(async (file) => {
+            const buffer = await file.arrayBuffer();
+            return {
+                name: file.name,
+                size: file.size,
+                buffer: new Uint8Array(buffer)
+            };
+        }));
+
+        // Process images with individual settings
+        const results = await processFilesWithSettings(fileData, fileSettings);
+
+        // Show results
+        if (results && results.success && Array.isArray(results.results)) {
+            showResults(results.results, selectedFiles.length);
+        } else if (Array.isArray(results)) {
+            showResults(results, selectedFiles.length);
+        } else {
+            console.error('Results has unexpected structure:', results);
+            showNotification('Error: Invalid processing results', 'error');
+            resetToDropZone();
+        }
+
+    } catch (error) {
+        console.error('Error processing images:', error);
+        
+        // Enhanced error messaging based on error type
+        let errorMessage = 'Error processing images';
+        if (error.message) {
+            if (error.message.includes('ENOSPC')) {
+                errorMessage = 'Not enough disk space. Please free up space and try again.';
+            } else if (error.message.includes('EACCES') || error.message.includes('EPERM')) {
+                errorMessage = 'Permission denied. Check output folder permissions.';
+            } else if (error.message.includes('timeout')) {
+                errorMessage = 'Processing timed out. Try with smaller files.';
+            } else if (error.message.includes('memory')) {
+                errorMessage = 'Out of memory. Close other apps and try again.';
+            } else if (error.message.includes('network')) {
+                errorMessage = 'Network error. Check your internet connection.';
+            }
+        }
+        
+        showNotification(errorMessage, 'error');
+        resetToDropZone();
+    }
+}
+
+async function processFilesWithSettings(fileData, fileSettings) {
+    // Process each file with its individual settings
+    const results = [];
+    for (let i = 0; i < fileData.length; i++) {
+        const result = await window.electronAPI.processImages({
+            files: [fileData[i]],
+            settings: fileSettings[i]
+        });
+        
+        if (result && result.results && result.results.length > 0) {
+            results.push(result.results[0]);
+        }
+        
+        // Update progress
+        const progress = ((i + 1) / fileData.length) * 100;
+        progressFill.style.width = `${progress}%`;
+        processedCount.textContent = (i + 1).toString();
+        currentFile.textContent = fileData[i].name;
+    }
+    
+    return { success: true, results };
+}
+
+// Legacy process images function (kept for compatibility)
 async function processImages(files) {
     processStartTime = Date.now();
     
@@ -420,7 +650,24 @@ async function processImages(files) {
 
     } catch (error) {
         console.error('Error processing images:', error);
-        showNotification('Error processing images', 'error');
+        
+        // Enhanced error messaging based on error type
+        let errorMessage = 'Error processing images';
+        if (error.message) {
+            if (error.message.includes('ENOSPC')) {
+                errorMessage = 'Not enough disk space. Please free up space and try again.';
+            } else if (error.message.includes('EACCES') || error.message.includes('EPERM')) {
+                errorMessage = 'Permission denied. Check output folder permissions.';
+            } else if (error.message.includes('timeout')) {
+                errorMessage = 'Processing timed out. Try with smaller files.';
+            } else if (error.message.includes('memory')) {
+                errorMessage = 'Out of memory. Close other apps and try again.';
+            } else if (error.message.includes('network')) {
+                errorMessage = 'Network error. Check your internet connection.';
+            }
+        }
+        
+        showNotification(errorMessage, 'error');
         resetToDropZone();
     }
 }
@@ -453,9 +700,9 @@ function showResults(results, totalFiles) {
     // Display popup modal
     resultsPopup.style.display = 'flex';
 
-    // Prepare detailed results dashboard in background
+    // Prepare detailed results dashboard in background (but keep hidden until popup is dismissed)
     processingState.style.display = 'none';
-    resultsDashboard.style.display = 'block';
+    // Don't show detailed dashboard yet - only when popup is closed
 
     // Update detailed statistics
     successCount.textContent = successful;
@@ -495,15 +742,89 @@ function showResults(results, totalFiles) {
     currentResults = results;
 }
 
+// Helper functions for conversion interface
+function updateConversionCount() {
+    const conversionCount = document.getElementById('conversionCount');
+    if (conversionCount) {
+        const selectedCount = document.querySelectorAll('.format-select').length;
+        conversionCount.textContent = selectedCount;
+    }
+}
+
+function setupGlobalControls() {
+    const globalFormat = document.getElementById('globalFormat');
+    const globalQuality = document.getElementById('globalQuality');
+    const globalQualityValue = document.getElementById('globalQualityValue');
+    const applyToAll = document.getElementById('applyToAll');
+    
+    if (globalQuality && globalQualityValue) {
+        globalQuality.addEventListener('input', (e) => {
+            globalQualityValue.textContent = `${e.target.value}%`;
+        });
+    }
+    
+    if (applyToAll) {
+        applyToAll.addEventListener('click', () => {
+            const format = globalFormat?.value;
+            const quality = globalQuality?.value;
+            
+            if (format) {
+                document.querySelectorAll('.format-select').forEach(select => {
+                    select.value = format;
+                });
+            }
+            
+            if (quality) {
+                document.querySelectorAll('.quality-slider').forEach(slider => {
+                    slider.value = quality;
+                    const valueSpan = slider.parentNode.querySelector('.quality-value-mini');
+                    if (valueSpan) valueSpan.textContent = `${quality}%`;
+                });
+            }
+            
+            showNotification('Settings applied to all images', 'success');
+        });
+    }
+    
+    // Setup individual quality sliders
+    document.querySelectorAll('.quality-slider').forEach(slider => {
+        slider.addEventListener('input', (e) => {
+            const valueSpan = e.target.parentNode.querySelector('.quality-value-mini');
+            if (valueSpan) valueSpan.textContent = `${e.target.value}%`;
+        });
+    });
+}
+
+function getConversionSettings() {
+    const conversions = [];
+    document.querySelectorAll('.format-select').forEach((select, index) => {
+        const qualitySlider = document.querySelector(`.quality-slider[data-file-index="${index}"]`);
+        const format = select.value;
+        const quality = qualitySlider ? parseInt(qualitySlider.value) : 80;
+        
+        if (format) {
+            conversions.push({
+                fileIndex: index,
+                format: format,
+                quality: quality
+            });
+        }
+    });
+    return conversions;
+}
+
 // Reset to drop zone
 function resetToDropZone() {
     // Clean up object URLs to prevent memory leaks
-    const previews = fileList.querySelectorAll('.file-preview img');
-    previews.forEach(img => {
-        if (img.src.startsWith('blob:')) {
-            URL.revokeObjectURL(img.src);
-        }
-    });
+    const conversionList = document.getElementById('conversionList');
+    if (conversionList) {
+        const previews = conversionList.querySelectorAll('.image-preview img');
+        previews.forEach(img => {
+            if (img.src.startsWith('blob:')) {
+                URL.revokeObjectURL(img.src);
+            }
+        });
+    }
     
     dropZone.style.display = 'block';
     filePreviewStage.style.display = 'none';
@@ -511,6 +832,32 @@ function resetToDropZone() {
     resultsDashboard.style.display = 'none';
     fileInput.value = '';
     pendingFiles = [];
+}
+
+// Submit feedback function
+async function submitFeedback(feedback) {
+    // Option 1: Use your webhook server
+    const webhookUrl = 'https://your-webhook-server.com/api/feedback';
+    
+    try {
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(feedback)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Feedback submission failed');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        // Fallback: use a service like Formspree or EmailJS
+        console.log('Webhook failed, using fallback method');
+        throw error; // Will trigger clipboard fallback
+    }
 }
 
 // Format file size
@@ -605,16 +952,34 @@ async function checkLicenseStatus() {
         const licenseResult = await window.electronAPI.checkLicense();
         
         if (!licenseResult.isLicensed) {
-            showPaywall();
+            // Desktop app users already purchased - no paywall needed
+            // Just enable full functionality
+            console.log('Desktop app user - enabling full functionality');
+            enableFullApp();
         } else {
             console.log('License active:', licenseResult.licenseInfo.licenseKey);
             // App is licensed, show full functionality
             enableFullApp();
+            updateLicenseDisplay(licenseResult.licenseInfo);
         }
     } catch (error) {
         console.error('Error checking license:', error);
-        // On error, assume unlicensed and show paywall
-        showPaywall();
+        // On error, still enable full functionality for desktop app users
+        console.log('License check failed - enabling app for desktop user');
+        enableFullApp();
+    }
+}
+
+function updateLicenseDisplay(licenseInfo) {
+    // Update license status in settings modal
+    const statusIndicator = document.getElementById('statusIndicator');
+    const licenseText = document.getElementById('licenseText');
+    
+    if (statusIndicator && licenseText) {
+        statusIndicator.style.color = '#10b981'; // Green
+        statusIndicator.textContent = '●';
+        licenseText.textContent = `Licensed (${licenseInfo.licenseKey})`;
+        licenseText.style.color = '#10b981';
     }
 }
 
@@ -994,9 +1359,81 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add feedback button functionality
     const feedbackBtn = document.getElementById('feedbackBtn');
-    if (feedbackBtn) {
+    const feedbackModal = document.getElementById('feedbackModal');
+    const closeFeedback = document.getElementById('closeFeedback');
+    const cancelFeedback = document.getElementById('cancelFeedback');
+    const submitFeedback = document.getElementById('submitFeedback');
+    
+    if (feedbackBtn && feedbackModal) {
         feedbackBtn.addEventListener('click', () => {
-            window.electronAPI.openExternal('mailto:r2thedev@gmail.com?subject=Épure Feedback&body=Hi! I have some feedback about Épure:\n\n');
+            feedbackModal.style.display = 'flex';
+        });
+    }
+    
+    if (closeFeedback && feedbackModal) {
+        closeFeedback.addEventListener('click', () => {
+            feedbackModal.style.display = 'none';
+        });
+    }
+    
+    if (cancelFeedback && feedbackModal) {
+        cancelFeedback.addEventListener('click', () => {
+            feedbackModal.style.display = 'none';
+        });
+    }
+    
+    if (submitFeedback) {
+        submitFeedback.addEventListener('click', async () => {
+            const type = document.getElementById('feedbackType')?.value || 'other';
+            const title = document.getElementById('feedbackTitle')?.value || '';
+            const message = document.getElementById('feedbackMessage')?.value || '';
+            const email = document.getElementById('feedbackEmail')?.value || '';
+            
+            if (!title.trim() || !message.trim()) {
+                showNotification('Please fill in the title and message fields', 'error');
+                return;
+            }
+            
+            // Submit feedback to your email via a simple service
+            const feedback = {
+                type,
+                title: title.trim(),
+                message: message.trim(),
+                email: email.trim(),
+                timestamp: new Date().toISOString(),
+                appVersion: '1.0.0',
+                platform: navigator.platform
+            };
+            
+            try {
+                // Send feedback via email service (you can set up a simple webhook)
+                await submitFeedback(feedback);
+                showNotification('Thank you for your feedback! We appreciate it.', 'success');
+            } catch (error) {
+                console.error('Failed to submit feedback:', error);
+                // Fallback: copy to clipboard for manual submission
+                const feedbackText = `Feedback Type: ${feedback.type}\nTitle: ${feedback.title}\nMessage: ${feedback.message}\nEmail: ${feedback.email}\nTimestamp: ${feedback.timestamp}\nPlatform: ${feedback.platform}`;
+                navigator.clipboard.writeText(feedbackText).then(() => {
+                    showNotification('Feedback copied to clipboard. Please email it to r2thedev@gmail.com', 'info');
+                }).catch(() => {
+                    showNotification('Please email your feedback to r2thedev@gmail.com', 'info');
+                });
+            }
+            
+            // Clear form and close modal
+            document.getElementById('feedbackTitle').value = '';
+            document.getElementById('feedbackMessage').value = '';
+            document.getElementById('feedbackEmail').value = '';
+            feedbackModal.style.display = 'none';
+        });
+    }
+    
+    // Close modal when clicking outside
+    if (feedbackModal) {
+        feedbackModal.addEventListener('click', (e) => {
+            if (e.target === feedbackModal) {
+                feedbackModal.style.display = 'none';
+            }
         });
     }
 }); 

@@ -13,6 +13,10 @@ interface FileDemo {
   optimizedSize: number
   status: 'waiting' | 'processing' | 'complete'
   progress: number
+  size: number
+  buffer?: ArrayBuffer
+  format?: string
+  quality?: number
 }
 
 const InteractiveDemo = () => {
@@ -23,13 +27,7 @@ const InteractiveDemo = () => {
   const [showSettings, setShowSettings] = useState(false)
   const [showUsageLimit, setShowUsageLimit] = useState(false)
   const [usageLimitMessage, setUsageLimitMessage] = useState('')
-  const [conversionSettings, setConversionSettings] = useState({
-    format: 'jpeg',
-    quality: 80,
-    maxWidth: 1920,
-    maxHeight: 1080,
-    stripMetadata: false
-  })
+  const [showThankYou, setShowThankYou] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const createDemoFile = (name: string): FileDemo => {
@@ -82,14 +80,7 @@ const InteractiveDemo = () => {
     setIsProcessing(false)
     setShowSettings(false)
     setShowUsageLimit(false)
-    // Reset conversion settings to defaults
-    setConversionSettings({
-      format: 'jpeg',
-      quality: 80,
-      maxWidth: 1920,
-      maxHeight: 1080,
-      stripMetadata: false
-    })
+    setShowThankYou(false)
     // Clear file input
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -99,11 +90,14 @@ const InteractiveDemo = () => {
 
 
   const handleUpgradeClick = () => {
-    // Track upgrade click
+    // Track upgrade click with more context
     if (typeof window !== 'undefined' && (window as any).mixpanel) {
       (window as any).mixpanel.track('Upgrade Clicked', {
         source: 'Usage Limit Modal',
-        current_usage: getUsageStats().totalImages
+        current_usage: getUsageStats().totalImages,
+        files_processed: files.length,
+        demo_session_duration: Date.now() - (window as any).demoStartTime || 0,
+        user_agent: navigator.userAgent
       })
     }
     
@@ -163,17 +157,23 @@ const InteractiveDemo = () => {
       return
     }
 
-    const newFiles: FileDemo[] = imageFiles.map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      originalSize: file.size,
-      optimizedSize: 0,
-      status: 'waiting',
-      progress: 0
-    }))
+    const newFiles: FileDemo[] = await Promise.all(
+      imageFiles.map(async (file) => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        originalSize: file.size,
+        optimizedSize: 0,
+        status: 'waiting' as const,
+        progress: 0,
+        size: file.size,
+        buffer: await file.arrayBuffer(),
+        format: 'jpeg', // Default format
+        quality: 80 // Default quality
+      }))
+    )
     
     setFiles(newFiles)
-    setShowSettings(true) // Show settings instead of auto-processing
+    setShowSettings(false) // Show conversion interface directly
     setTotalSaved(0)
 
     // Track real file upload
@@ -243,6 +243,11 @@ const InteractiveDemo = () => {
     }, 100)
     
     setIsProcessing(false)
+    
+    // Show thank you message after processing
+    setTimeout(() => {
+      setShowThankYou(true)
+    }, 500)
   }
 
   // Drag and drop handlers
@@ -297,31 +302,36 @@ const InteractiveDemo = () => {
             <CardContent className="p-8">
               {/* Demo Interface */}
               <div className="space-y-8">
-                {/* Drag & Drop Area */}
-                <div className="relative">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  <motion.div
-                    className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 cursor-pointer ${
-                      isDragOver
-                        ? 'border-primary bg-primary/10 scale-105'
-                        : isProcessing 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-gray-300 hover:border-primary hover:bg-primary/5'
-                    }`}
-                    whileHover={{ scale: isProcessing ? 1 : 1.02 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    onClick={() => !isProcessing && fileInputRef.current?.click()}
-                  >
+                {/* Drag & Drop Area - Only show when no files selected */}
+                {files.length === 0 && (
+                  <div className="relative">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <motion.div
+                      className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 cursor-pointer ${
+                        isDragOver
+                          ? 'border-primary bg-primary/10 scale-105'
+                          : isProcessing 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-gray-300 hover:border-primary hover:bg-primary/5'
+                      }`}
+                                          whileHover={{ 
+                      borderColor: isProcessing ? undefined : "rgb(59, 130, 246)",
+                      backgroundColor: isProcessing ? undefined : "rgba(59, 130, 246, 0.02)"
+                    }}
+                    transition={{ duration: 0.2 }}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => !isProcessing && fileInputRef.current?.click()}
+                      style={{ pointerEvents: 'auto' }}
+                    >
                     <motion.div
                       animate={isProcessing ? { y: [0, -10, 0] } : {}}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -345,7 +355,11 @@ const InteractiveDemo = () => {
                         disabled={isProcessing}
                         variant="premium"
                         size="lg"
-                        className="min-w-40"
+                        className="min-w-40 relative z-10"
+                        style={{ 
+                          cursor: isProcessing ? 'not-allowed' : 'pointer',
+                          pointerEvents: 'all'
+                        }}
                       >
                         {isProcessing ? (
                           <>
@@ -378,111 +392,120 @@ const InteractiveDemo = () => {
                       )}
                     </div>
                   </motion.div>
-                </div>
+                  </div>
+                )}
 
-                {/* Conversion Settings Panel */}
-                <AnimatePresence>
-                  {showSettings && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="bg-gray-50 rounded-xl p-6 border mt-6"
-                    >
-                      <h3 className="text-lg font-semibold mb-4">Conversion Settings</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Output Format */}
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Output Format</label>
-                          <select
-                            value={conversionSettings.format}
-                            onChange={(e) => setConversionSettings(prev => ({ ...prev, format: e.target.value }))}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
-                          >
-                            <option value="jpeg">JPEG</option>
-                            <option value="png">PNG</option>
-                            <option value="webp">WebP</option>
-                          </select>
+                {/* Conversion Interface - Show when files are selected */}
+                {files.length > 0 && !showSettings && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-6"
+                  >
+                    <div className="text-center">
+                      <h3 className="text-xl font-semibold mb-2">Choose Conversion Settings</h3>
+                      <p className="text-gray-600">Select output format and quality for each image</p>
+                    </div>
+                    
+                    {/* Conversion List */}
+                    <div className="space-y-4 max-h-80 overflow-y-auto">
+                      {files.map((file, index) => (
+                        <div key={file.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                          {/* Image Preview */}
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                            {file.buffer ? (
+                              <img 
+                                src={URL.createObjectURL(new Blob([file.buffer]))}
+                                alt={file.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.parentElement!.innerHTML = '📷';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-2xl">📷</div>
+                            )}
+                          </div>
+                          
+                          {/* File Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-gray-500">
+                              {(file.size / 1024 / 1024).toFixed(1)} MB • {file.name.split('.').pop()?.toUpperCase()}
+                            </div>
+                          </div>
+                          
+                          {/* Convert Arrow */}
+                          <div className="flex flex-col items-center px-4 py-2 bg-blue-50 rounded-lg">
+                            <span className="text-blue-600 text-lg">→</span>
+                            <span className="text-blue-600 text-xs font-semibold">CONVERT</span>
+                          </div>
+                          
+                          {/* Format Selection */}
+                          <div className="flex items-center gap-3">
+                            <select 
+                              className="px-3 py-2 border rounded-lg text-sm bg-white"
+                              value={file.format || 'jpeg'}
+                              onChange={(e) => {
+                                // Update file format in state
+                                setFiles(prev => prev.map((f, i) => 
+                                  i === index ? { ...f, format: e.target.value } : f
+                                ));
+                              }}
+                            >
+                              <option value="jpeg">JPEG</option>
+                              <option value="png">PNG</option>
+                              <option value="webp">WebP</option>
+                            </select>
+                            
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="range" 
+                                min="10" 
+                                max="100" 
+                                value={file.quality || 80}
+                                className="w-16"
+                                onChange={(e) => {
+                                  // Update quality in state
+                                  setFiles(prev => prev.map((f, i) => 
+                                    i === index ? { ...f, quality: parseInt(e.target.value) } : f
+                                  ));
+                                }}
+                              />
+                              <span className="text-xs text-gray-500 min-w-8">{file.quality || 80}%</span>
+                            </div>
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-4">
+                      <Button
+                        onClick={() => {
+                          setFiles([]);
+                          resetDemo();
+                        }}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          // Use individual file settings for processing
+                          startProcessingWithSettings()
+                        }}
+                        variant="premium"
+                        className="flex-1"
+                        disabled={isProcessing}
+                      >
+                        {isProcessing ? 'Processing...' : `Convert ${files.length} Images`}
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
 
-                        {/* Quality */}
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Quality: {conversionSettings.quality}%
-                          </label>
-                          <input
-                            type="range"
-                            min="10"
-                            max="100"
-                            value={conversionSettings.quality}
-                            onChange={(e) => setConversionSettings(prev => ({ ...prev, quality: parseInt(e.target.value) }))}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                          />
-                        </div>
-
-                        {/* Max Width */}
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Max Width (px)</label>
-                          <input
-                            type="number"
-                            value={conversionSettings.maxWidth}
-                            onChange={(e) => setConversionSettings(prev => ({ ...prev, maxWidth: parseInt(e.target.value) || 1920 }))}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
-
-                        {/* Max Height */}
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Max Height (px)</label>
-                          <input
-                            type="number"
-                            value={conversionSettings.maxHeight}
-                            onChange={(e) => setConversionSettings(prev => ({ ...prev, maxHeight: parseInt(e.target.value) || 1080 }))}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Strip Metadata Checkbox */}
-                      <div className="mt-4">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={conversionSettings.stripMetadata}
-                            onChange={(e) => setConversionSettings(prev => ({ ...prev, stripMetadata: e.target.checked }))}
-                            className="mr-2 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                          />
-                          <span className="text-sm">Strip metadata (remove EXIF data)</span>
-                        </label>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-4 mt-6">
-                        <Button
-                          onClick={startProcessingWithSettings}
-                          variant="premium"
-                          className="flex-1 cursor-pointer"
-                          disabled={isProcessing}
-                        >
-                          {isProcessing ? 'Processing...' : `Start Processing (${files.length} files)`}
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            setShowSettings(false)
-                            setFiles([])
-                            resetDemo()
-                          }}
-                          variant="outline"
-                          className="cursor-pointer"
-                          disabled={isProcessing}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
                 {/* File Processing List */}
                 <AnimatePresence>
@@ -653,6 +676,65 @@ const InteractiveDemo = () => {
             </p>
           </div>
         </motion.div>
+        
+        {/* Thank You Popup */}
+        <AnimatePresence>
+          {showThankYou && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              onClick={() => setShowThankYou(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <CheckCircle className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    Thank You for Trying Épure! 🎉
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    You've saved <strong>{formatFileSize(totalSaved)}</strong> of storage space!
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Want to process unlimited images without restrictions?
+                  </p>
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={() => {
+                      setShowThankYou(false)
+                      // Scroll to pricing section
+                      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                    variant="premium"
+                    className="w-full"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Get Épure for $9
+                  </Button>
+                  <Button
+                    onClick={() => setShowThankYou(false)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Continue Exploring
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   )

@@ -5,7 +5,7 @@
     <title>Épure</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.mixpanel.com https://api.stripe.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.mixpanel.com https://api.stripe.com; img-src 'self' data: blob:; media-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self';">
 </head>
 <body>
     <!-- Custom Title Bar -->
@@ -63,26 +63,33 @@
             <div class="file-preview-stage" id="filePreviewStage" style="display: none;">
                 <div class="preview-card">
                     <div class="preview-header">
-                        <h3>Ready to Process</h3>
-                        <p class="preview-subtitle">Review your settings and start when ready</p>
+                        <h3>Choose Conversion Settings</h3>
+                        <p class="preview-subtitle">Select your output format and quality for each image</p>
                     </div>
                     
-                    <div class="file-list" id="fileList">
-                        <!-- Files will be populated here -->
+                    <div class="conversion-list" id="conversionList">
+                        <!-- Conversion items will be populated here -->
                     </div>
                     
-                    <div class="preview-summary">
-                        <div class="summary-item">
-                            <span class="summary-label">Images:</span>
-                            <span class="summary-value" id="fileCount">0</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Total Size:</span>
-                            <span class="summary-value" id="totalSize">0 MB</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Output Format:</span>
-                            <span class="summary-value" id="outputFormat">JPEG</span>
+                    <div class="global-settings">
+                        <h4>Apply to All Images</h4>
+                        <div class="global-controls">
+                            <div class="format-selector-global">
+                                <label>Format:</label>
+                                <select id="globalFormat">
+                                    <option value="">Choose format...</option>
+                                    <option value="jpeg">JPEG</option>
+                                    <option value="png">PNG</option>
+                                    <option value="webp">WebP</option>
+                                    <option value="avif">AVIF</option>
+                                </select>
+                            </div>
+                            <div class="quality-selector-global">
+                                <label>Quality:</label>
+                                <input type="range" id="globalQuality" min="1" max="100" value="80">
+                                <span id="globalQualityValue">80%</span>
+                            </div>
+                            <button class="secondary-btn" id="applyToAll">Apply to All</button>
                         </div>
                     </div>
                     
@@ -92,7 +99,7 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M7 16L12 11L17 16M12 4V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            Start Processing
+                            Convert <span id="conversionCount">0</span> Images
                         </button>
                     </div>
                 </div>
@@ -248,7 +255,7 @@
                 </button>
             </div>
             
-            <button class="close-popup" id="closeResultsPopup">×</button>
+            <button class="close-popup" id="closeResultsPopupBtn">×</button>
         </div>
     </div>
 
@@ -340,6 +347,45 @@
             <div class="modal-footer">
                 <button class="secondary-btn" id="resetSettings">Reset to Defaults</button>
                 <button class="primary-btn" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="modal-overlay" id="feedbackModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Send Feedback</h2>
+                <button class="close-modal" id="closeFeedback">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="feedback-form">
+                    <div class="setting-row">
+                        <label for="feedbackType">Feedback Type</label>
+                        <select id="feedbackType">
+                            <option value="bug">Bug Report</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="improvement">Improvement Suggestion</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <label for="feedbackTitle">Title</label>
+                        <input type="text" id="feedbackTitle" placeholder="Brief description of your feedback">
+                    </div>
+                    <div class="setting-row">
+                        <label for="feedbackMessage">Message</label>
+                        <textarea id="feedbackMessage" rows="6" placeholder="Please describe your feedback in detail..."></textarea>
+                    </div>
+                    <div class="setting-row">
+                        <label for="feedbackEmail">Email (optional)</label>
+                        <input type="email" id="feedbackEmail" placeholder="your@email.com (for follow-up)">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary-btn" id="cancelFeedback">Cancel</button>
+                <button class="primary-btn" id="submitFeedback">Send Feedback</button>
             </div>
         </div>
     </div>

@@ -40,7 +40,9 @@ export const initiatePayment = async () => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create checkout session');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Checkout session failed:', response.status, errorData);
+      throw new Error(errorData.error || 'Failed to create checkout session');
     }
 
     const session = await response.json();

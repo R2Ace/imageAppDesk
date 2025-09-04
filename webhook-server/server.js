@@ -27,6 +27,17 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Debug endpoint for environment variables
+app.get('/debug/env', (req, res) => {
+  res.json({
+    nodeEnv: process.env.NODE_ENV,
+    hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
+    stripeKeyLength: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.length : 0,
+    port: process.env.PORT,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Statistics endpoint
 app.get('/api/stats', async (req, res) => {
   try {
@@ -127,6 +138,17 @@ app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const { successUrl, cancelUrl } = req.body;
     
+    // Enhanced logging for debugging
+    console.log('Creating checkout session with:', { successUrl, cancelUrl });
+    console.log('Stripe key present:', !!process.env.STRIPE_SECRET_KEY);
+    console.log('Environment:', process.env.NODE_ENV);
+    
+    // Validate required environment variables
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('STRIPE_SECRET_KEY not found in environment');
+      return res.status(500).json({ error: 'Payment system not configured' });
+    }
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -150,10 +172,19 @@ app.post('/api/create-checkout-session', async (req, res) => {
       }
     });
 
+    console.log('Checkout session created successfully:', session.id);
     res.json({ url: session.url });
   } catch (error) {
     console.error('Error creating checkout session:', error);
-    res.status(500).json({ error: 'Failed to create checkout session' });
+    console.error('Error details:', {
+      message: error.message,
+      type: error.type,
+      code: error.code
+    });
+    res.status(500).json({ 
+      error: 'Failed to create checkout session',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

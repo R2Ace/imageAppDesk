@@ -7,14 +7,19 @@
   "scripts": {
     "start": "electron .",
     "dev": "cross-env NODE_ENV=development electron .",
-    "build": "electron-builder",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win",
-    "build:mas": "electron-builder --mac --publish never",
-    "build:dmg": "electron-builder --mac dmg --publish never",
-    "dist": "electron-builder --publish never",
-    "dist:mas": "electron-builder --mac mas --publish never",
-    "dist:win": "electron-builder --win --publish never"
+    "build": "npm run clean && npm run build:production",
+    "build:production": "cross-env NODE_ENV=production electron-builder",
+    "build:mac": "cross-env NODE_ENV=production electron-builder --mac",
+    "build:win": "cross-env NODE_ENV=production electron-builder --win",
+    "build:mas": "cross-env NODE_ENV=production electron-builder --mac --publish never",
+    "build:dmg": "cross-env NODE_ENV=production electron-builder --mac dmg --publish never",
+    "dist": "npm run clean && cross-env NODE_ENV=production electron-builder --publish never",
+    "dist:mas": "cross-env NODE_ENV=production electron-builder --mac mas --publish never",
+    "dist:win": "cross-env NODE_ENV=production electron-builder --win --publish never",
+    "clean": "rm -rf dist build/dist",
+    "test": "echo \"Tests not implemented yet\"",
+    "lint": "echo \"Linting not configured yet\"",
+    "prepack": "npm run clean"
   },
       "keywords": [
     "electron",
