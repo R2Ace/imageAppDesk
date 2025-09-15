@@ -34,8 +34,8 @@ export const initiatePayment = async () => {
       body: JSON.stringify({
         priceId: config.priceId || 'price_1OXf4JA8Xjc7tVUm9K8j1234', // Your Stripe price ID
         productName: config.productName,
-        successUrl: window.location.origin + '/success',
-        cancelUrl: window.location.origin + '/cancel'
+        successUrl: 'https://epure-web.vercel.app/success',
+        cancelUrl: 'https://epure-web.vercel.app/'
       }),
     });
 
