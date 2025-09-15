@@ -379,6 +379,8 @@ app.listen(PORT, () => {
   console.log(`🚀 Webhook server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`📈 Statistics: http://localhost:${PORT}/api/stats`);
+  console.log(`🔑 Stripe key present: ${!!process.env.STRIPE_SECRET_KEY}`);
+  console.log(`📧 Gmail user present: ${!!process.env.GMAIL_USER}`);
   
   if (process.env.NODE_ENV !== 'production') {
     console.log(`🧪 Test endpoints available in development mode`);
