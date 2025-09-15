@@ -33,6 +33,8 @@ app.get('/debug/env', (req, res) => {
     nodeEnv: process.env.NODE_ENV,
     hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
     stripeKeyLength: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.length : 0,
+    hasGmailUser: !!process.env.GMAIL_USER,
+    hasGmailPass: !!process.env.GMAIL_APP_PASSWORD,
     port: process.env.PORT,
     timestamp: new Date().toISOString()
   });
@@ -213,11 +215,13 @@ app.post('/api/create-checkout-session', async (req, res) => {
     console.error('Error details:', {
       message: error.message,
       type: error.type,
-      code: error.code
+      code: error.code,
+      stripeKeyPresent: !!process.env.STRIPE_SECRET_KEY,
+      stripeKeyLength: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.length : 0
     });
     res.status(500).json({ 
-      error: 'Failed to create checkout session',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Payment system temporarily unavailable. Please contact r2thedev@gmail.com to purchase Épure for $9.',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Stripe configuration error'
     });
   }
 });
