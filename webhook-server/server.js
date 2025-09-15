@@ -133,6 +133,37 @@ app.get('/api/licenses/:email', async (req, res) => {
   }
 });
 
+// Feedback submission endpoint
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { type, title, message, email, timestamp, appVersion, platform } = req.body;
+    
+    console.log('📝 Feedback received:', { type, title, email, platform });
+    
+    // Send feedback email
+    await emailService.sendFeedbackEmail({
+      type,
+      title,
+      message,
+      email,
+      timestamp,
+      appVersion,
+      platform
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Feedback submitted successfully' 
+    });
+  } catch (error) {
+    console.error('Error processing feedback:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to submit feedback' 
+    });
+  }
+});
+
 // Create Stripe Checkout Session
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
@@ -146,7 +177,10 @@ app.post('/api/create-checkout-session', async (req, res) => {
     // Validate required environment variables
     if (!process.env.STRIPE_SECRET_KEY) {
       console.error('STRIPE_SECRET_KEY not found in environment');
-      return res.status(500).json({ error: 'Payment system not configured' });
+      return res.status(500).json({ 
+        error: 'Payment system temporarily unavailable. Please contact r2thedev@gmail.com to purchase Épure for $9.',
+        details: 'Stripe not configured'
+      });
     }
     
     const session = await stripe.checkout.sessions.create({

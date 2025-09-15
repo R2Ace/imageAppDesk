@@ -211,6 +211,80 @@ Thanks for choosing Épure!
       throw error;
     }
   }
+
+  async sendFeedbackEmail(feedback) {
+    const { type, title, message, email, timestamp, appVersion, platform } = feedback;
+    
+    const emailHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Épure Feedback</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .feedback-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .meta { color: #6c757d; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📝 New Épure Feedback</h2>
+        
+        <div class="feedback-box">
+            <h3>${title}</h3>
+            <p><strong>Type:</strong> ${type}</p>
+            <p><strong>Message:</strong></p>
+            <p>${message.replace(/\n/g, '<br>')}</p>
+        </div>
+        
+        <div class="meta">
+            <p><strong>From:</strong> ${email || 'No email provided'}</p>
+            <p><strong>Platform:</strong> ${platform || 'Unknown'}</p>
+            <p><strong>App Version:</strong> ${appVersion || 'Unknown'}</p>
+            <p><strong>Timestamp:</strong> ${timestamp || new Date().toISOString()}</p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+    const emailText = `
+New Épure Feedback
+
+Title: ${title}
+Type: ${type}
+Message: ${message}
+
+From: ${email || 'No email provided'}
+Platform: ${platform || 'Unknown'}
+App Version: ${appVersion || 'Unknown'}
+Timestamp: ${timestamp || new Date().toISOString()}
+`;
+
+    const mailOptions = {
+      from: process.env.SENDGRID_FROM_EMAIL || process.env.GMAIL_USER || 'noreply@epure.app',
+      to: 'r2thedev@gmail.com',
+      subject: `Épure Feedback: ${title}`,
+      text: emailText,
+      html: emailHTML
+    };
+
+    try {
+      if (this.transporter) {
+        const result = await this.transporter.sendMail(mailOptions);
+        console.log('✅ Feedback email sent successfully:', result.messageId);
+        return { success: true, messageId: result.messageId };
+      } else {
+        console.log('📧 Feedback email would be sent to r2thedev@gmail.com');
+        console.log('Feedback:', { type, title, message, email, platform });
+        return { success: true, messageId: 'test-mode' };
+      }
+    } catch (error) {
+      console.error('❌ Failed to send feedback email:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = EmailService;
