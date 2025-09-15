@@ -1,10 +1,10 @@
 {
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "cd webhook-server && npm ci"
+    "buildCommand": "cd webhook-server && npm install"
   },
   "deploy": {
-    "startCommand": "cd webhook-server && npm start",
+    "startCommand": "cd webhook-server && node server.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
