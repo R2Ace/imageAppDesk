@@ -1,103 +1,202 @@
-# Épure - Image Processing App
+# Épure Webhook Server
 
-A beautiful, minimalist image processing app for macOS that resizes and converts images locally.
-
-## 🏗️ Project Structure
-
-```
-imageAppDesk/
-├── 📱 desktop-app/           # Electron Desktop Application
-│   ├── main.js              # Electron main process
-│   ├── renderer.js          # App UI logic
-│   ├── preload.js           # Secure IPC bridge
-│   ├── index.html           # App interface
-│   ├── styles.css           # App styling
-│   ├── build/               # Build configurations
-│   ├── assets/              # Icons and images
-│   └── dist/                # Built application output
-├── 🌐 website/              # Landing Page & Marketing Site
-│   ├── index.html           # Website homepage
-│   ├── css/                 # Website styles
-│   ├── js/                  # Website scripts
-│   └── images/              # Website assets
-├── 📄 docs/                 # Documentation
-│   ├── MVP_SETUP_GUIDE.md   # Development setup guide
-│   ├── MIXPANEL_SETUP.md    # Analytics configuration
-│   └── WEBPAGE_IMPROVEMENTS.md # Website enhancement notes
-└── package.json             # Workspace configuration
-```
+A complete webhook server for handling Stripe payments, generating license keys, and delivering them via email.
 
 ## 🚀 Quick Start
 
-### Desktop App (Electron)
+### 1. Install Dependencies
 ```bash
-# Install dependencies and start desktop app
-npm run start
+cd webhook-server
+npm install
+```
 
-# Development mode with hot reload
+### 2. Environment Setup
+Copy `env-example.txt` to `.env` and fill in your credentials:
+
+```bash
+cp env-example.txt .env
+```
+
+Edit `.env` with your actual values:
+```bash
+# Stripe (Required)
+STRIPE_SECRET_KEY=sk_test_your_test_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+
+# Email (Pick one)
+GMAIL_USER=your-email@gmail.com
+GMAIL_APP_PASSWORD=your-app-password
+
+# Server
+PORT=3001
+NODE_ENV=development
+```
+
+### 3. Start Server
+```bash
+# Development mode (with auto-restart)
 npm run dev
 
-# Build DMG for distribution
-npm run build:dmg
+# Production mode
+npm start
 ```
 
-### Website (Landing Page)
+### 4. Test Everything
 ```bash
-# Start website development server
-npm run website:start
-
-# Website will open at http://localhost:3000
-npm run website:dev
+npm test
 ```
 
-### Workspace Commands
+## 📊 API Endpoints
+
+### License Management
+- `GET /api/validate-license/:key` - Validate a license key
+- `POST /api/activate-license` - Activate a license on a device
+- `GET /api/licenses/:email` - Find all licenses for an email
+
+### Statistics
+- `GET /api/stats` - Get license and revenue statistics
+- `GET /health` - Server health check
+
+### Webhooks
+- `POST /webhook` - Stripe webhook endpoint
+
+### Testing (Development Only)
+- `POST /api/test/generate-license` - Generate a test license
+- `POST /api/test/send-email` - Send a test email
+
+## 🔧 Configuration
+
+### Email Services
+
+**Option 1: Gmail (Easiest for testing)**
+1. Enable 2-factor authentication on your Gmail account
+2. Generate an "App Password" for your account
+3. Use those credentials in your `.env` file
+
+**Option 2: SendGrid (Recommended for production)**
+1. Sign up at SendGrid.com
+2. Get your API key
+3. Add it to your `.env` file
+
+### Stripe Setup
+
+1. **Get your keys** from your Stripe dashboard
+2. **Create a webhook endpoint** pointing to `your-server.com/webhook`
+3. **Subscribe to events:** `payment_intent.succeeded`, `payment_intent.payment_failed`
+4. **Copy the webhook secret** to your `.env` file
+
+## 🧪 Testing Flow
+
+### 1. Test License Generation
 ```bash
-# Install all dependencies (root + desktop-app + website)
-npm run install:all
-
-# Clean all node_modules and build files
-npm run clean
+curl -X POST http://localhost:3001/api/test/generate-license \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com"}'
 ```
 
-## 📱 Desktop App Features
+### 2. Test License Validation
+```bash
+curl http://localhost:3001/api/validate-license/EPURE-ABC123-DEF456-GHI789
+```
 
-- **Drag & Drop Interface** - Simple image processing
-- **Multiple Formats** - JPEG, PNG, WebP, HEIC, TIFF support
-- **Batch Processing** - Handle multiple images at once
-- **Preview Stage** - See images before processing
-- **Results Celebration** - Instant feedback with stats
-- **Privacy First** - All processing done locally
+### 3. Test Email Sending
+```bash
+curl -X POST http://localhost:3001/api/test/send-email \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "type": "license"}'
+```
 
-## 🌐 Website Features
+## 🗄️ Database
 
-- **Professional Landing Page** - Modern, responsive design
-- **Dark/Light Mode** - User preference toggle
-- **Pricing Integration** - Ready for Stripe checkout
-- **FAQ Section** - Common user questions
-- **Mobile Responsive** - Works on all devices
+The server uses SQLite for simplicity. All data is stored in `licenses.db`.
 
-## 🔧 Development
+### Tables:
+- **licenses** - License keys and purchase info
+- **license_activations** - Track where licenses are activated
 
-This is a **workspace project** with two main applications:
+## 🔐 Security Features
 
-1. **Desktop App** (`desktop-app/`) - Electron application
-2. **Website** (`website/`) - Static landing page
+- ✅ Webhook signature verification
+- ✅ License key format validation
+- ✅ Secure random key generation
+- ✅ SQL injection protection
+- ✅ Error handling and logging
 
-Each has its own `package.json` and can be developed independently.
+## 📈 Production Deployment
 
-## 📦 Building & Distribution
+### Option 1: Heroku
+```bash
+git add .
+git commit -m "Initial webhook server"
+heroku create your-app-name
+git push heroku main
+```
 
-- **Desktop App**: Builds to `desktop-app/dist/`
-- **Website**: Static files, no build process needed
-- **Code Signing**: Requires Apple Developer Account for distribution
+### Option 2: DigitalOcean/AWS/Vercel
+Deploy as a Node.js application with the environment variables configured.
 
-## 🎯 Current Status
+### Important: Set Webhook URL
+In your Stripe dashboard, set the webhook URL to:
+`https://your-server.com/webhook`
 
-- ✅ **Desktop App**: Feature complete, security hardened
-- ✅ **Website**: Professional design, navigation complete
-- ⏳ **Business Setup**: Need Stripe integration for sales
-- ⏳ **Distribution**: Need Apple Developer account for signing
+## 🎯 Integration with Desktop App
 
----
+Your desktop app should call:
+```javascript
+// Validate license
+const response = await fetch('https://your-server.com/api/validate-license/EPURE-ABC123-DEF456-GHI789');
+const { valid, info } = await response.json();
 
-**Ready to launch!** Just need business infrastructure (Stripe + Apple Developer) to start selling.
+// Activate license
+const activation = await fetch('https://your-server.com/api/activate-license', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    licenseKey: 'EPURE-ABC123-DEF456-GHI789',
+    machineId: 'unique-machine-id',
+    platform: 'darwin',
+    appVersion: '1.0.0'
+  })
+});
+```
+
+## 📧 Email Templates
+
+The server includes beautiful HTML email templates with:
+- License key prominently displayed
+- Download links for Mac/Windows
+- Setup instructions
+- Professional branding
+
+## 🐛 Troubleshooting
+
+### Common Issues:
+
+1. **Webhook signature verification failed**
+   - Check your `STRIPE_WEBHOOK_SECRET` is correct
+   - Ensure raw body parsing is working
+
+2. **Email not sending**
+   - Verify your email credentials
+   - Check Gmail App Password setup
+
+3. **License validation failing**
+   - Ensure license key format is correct
+   - Check database connection
+
+### Logs:
+The server provides detailed logging for debugging. Check console output for:
+- ✅ Success messages
+- ❌ Error details
+- 📧 Email sending status
+
+## 🚀 Ready to Launch!
+
+This webhook server is production-ready and handles:
+- Automatic license generation
+- Email delivery
+- License validation
+- Usage tracking
+- Error handling
+
+Perfect for your 5-day launch timeline! 🎉

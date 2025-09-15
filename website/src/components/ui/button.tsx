@@ -4,19 +4,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95 cursor-pointer",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95",
   {
     variants: {
       variant: {
-        default: "bg-primary text-white hover:bg-primary/90 shadow-lg hover:shadow-xl",
-        destructive: "bg-red-500 text-white hover:bg-red-500/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-white/10 text-white border-2 border-white/50 hover:bg-white/20 backdrop-blur-sm hover:shadow-glow font-bold",
-        premium: "bg-gradient-primary text-white hover:shadow-strong hover:scale-105 shadow-lg",
-        secondary_premium: "bg-white text-primary border-2 border-primary hover:bg-[#3b82f6] hover:text-white shadow-lg hover:shadow-xl hover:scale-105 font-bold"
+        default: "bg-primary text-white hover:bg-primary/90 shadow-lg hover:shadow-xl cursor-pointer",
+        destructive: "bg-red-500 text-white hover:bg-red-500/90 cursor-pointer",
+        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer",
+        ghost: "hover:bg-accent hover:text-accent-foreground cursor-pointer",
+        link: "text-primary underline-offset-4 hover:underline cursor-pointer",
+        hero: "bg-white/10 text-white border-2 border-white/50 hover:bg-white/20 backdrop-blur-sm hover:shadow-glow font-bold cursor-pointer",
+        premium: "bg-gradient-primary text-white hover:shadow-strong hover:scale-105 shadow-lg cursor-pointer",
+        secondary_premium: "bg-white text-primary border-2 border-primary hover:bg-[#3b82f6] hover:text-white shadow-lg hover:shadow-xl hover:scale-105 font-bold cursor-pointer"
       },
       size: {
         default: "h-10 px-4 py-2",
