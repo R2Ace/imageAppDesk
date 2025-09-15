@@ -34,7 +34,8 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
-    hasGmailUser: !!process.env.GMAIL_USER
+    hasGmailUser: !!process.env.GMAIL_USER,
+    stripeKeyLength: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.length : 0
   });
 });
 
