@@ -1,7 +1,16 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+// Initialize Stripe with error handling
+let stripe;
+try {
+  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  console.log('✅ Stripe initialized successfully');
+} catch (error) {
+  console.error('❌ Stripe initialization failed:', error.message);
+  stripe = null;
+}
 
 // Import our modules
 const LicenseGenerator = require('./license-generator');
@@ -179,8 +188,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
     console.log('Environment:', process.env.NODE_ENV);
     
     // Validate required environment variables
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('STRIPE_SECRET_KEY not found in environment');
+    if (!process.env.STRIPE_SECRET_KEY || !stripe) {
+      console.error('STRIPE_SECRET_KEY not found in environment or Stripe not initialized');
       return res.status(500).json({ 
         error: 'Payment system temporarily unavailable. Please contact r2thedev@gmail.com to purchase Épure for $9.',
         details: 'Stripe not configured'
