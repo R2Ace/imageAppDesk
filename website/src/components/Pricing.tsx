@@ -23,7 +23,7 @@ const Pricing = () => {
 
   const handlePurchase = async () => {
     // Check if running on localhost - show download link instead
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
       // For localhost, download the DMG file directly
       const link = document.createElement('a')
       link.href = '/Épure-1.0.0.dmg'
@@ -61,11 +61,25 @@ const Pricing = () => {
     "Metadata preservation options",
     "Works completely offline",
     "Lifetime updates & support",
-    "30-day money-back guarantee",
-    "Coming Soon: Document conversion (PDF, Word, Excel)",
-    "Coming Soon: Video conversion (MP4, MOV, AVI, etc.)",
-    "Coming Soon: Audio conversion (MP3, WAV, FLAC, etc.)",
-    "Get ALL future conversions with this purchase!"
+    "30-day money-back guarantee"
+  ]
+
+  const futureFeatures = [
+    {
+      category: "Documents",
+      icon: "📄",
+      features: ["PDF conversion", "Word, Excel, PowerPoint", "Pages, Numbers support"]
+    },
+    {
+      category: "Video",
+      icon: "🎥",
+      features: ["MP4, MOV, AVI", "MKV, WebM support", "Quality control"]
+    },
+    {
+      category: "Audio",
+      icon: "🎵",
+      features: ["MP3, WAV, FLAC", "AAC, OGG support", "Bitrate control"]
+    }
   ]
 
   return (
@@ -165,6 +179,57 @@ const Pricing = () => {
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Future Features Carousel */}
+        <motion.div
+          className="mt-16"
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true }}
+        >
+          <div className="text-center mb-12">
+            <h3 className="text-3xl font-bold text-foreground mb-4">
+              Coming Soon - Universal Converter
+            </h3>
+            <p className="text-xl text-muted-foreground">
+              Get ALL future conversions with your purchase today
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {futureFeatures.map((category, index) => (
+              <motion.div
+                key={category.category}
+                className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-6 border border-primary/20 hover:border-primary/40 transition-all duration-300"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.2 }}
+                viewport={{ once: true }}
+              >
+                <div className="text-center mb-4">
+                  <div className="text-4xl mb-2">{category.icon}</div>
+                  <h4 className="text-xl font-bold text-foreground">{category.category}</h4>
+                </div>
+                <ul className="space-y-2">
+                  {category.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-center gap-2 text-muted-foreground">
+                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center mt-8">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-primary text-white rounded-full text-lg font-bold shadow-lg">
+              <span>🚀</span>
+              <span>All future features included with your purchase!</span>
+            </div>
+          </div>
         </motion.div>
 
         {/* Email Signup */}
