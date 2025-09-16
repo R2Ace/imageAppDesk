@@ -1,5 +1,11 @@
-// Load environment variables first
-require('dotenv').config();
+// Load environment variables first (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    require('dotenv').config();
+  } catch (error) {
+    console.log('dotenv not available in production build');
+  }
+}
 
 // Initialize Sentry crash reporting first
 const { initSentry } = require('./config/sentry');

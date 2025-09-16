@@ -78,7 +78,10 @@
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "icon": "build/icon.icns",
-      "minimumSystemVersion": "10.15.0"
+      "minimumSystemVersion": "10.15.0",
+      "extendInfo": {
+        "CFBundleIconFile": "icon.icns"
+      }
     },
     "mas": {
       "category": "public.app-category.graphics-design", 
