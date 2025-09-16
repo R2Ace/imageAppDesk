@@ -1,5 +1,22 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// Enhanced logging for preload script
+const log = {
+  info: (message, ...args) => {
+    console.log(`[PRELOAD] ${new Date().toISOString()} - ${message}`, ...args);
+  },
+  error: (message, ...args) => {
+    console.error(`[PRELOAD ERROR] ${new Date().toISOString()} - ${message}`, ...args);
+  },
+  debug: (message, ...args) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[PRELOAD DEBUG] ${new Date().toISOString()} - ${message}`, ...args);
+    }
+  }
+};
+
+log.info('Preload script loaded');
+
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {

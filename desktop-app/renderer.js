@@ -1,3 +1,20 @@
+// Enhanced logging for renderer script
+const log = {
+  info: (message, ...args) => {
+    console.log(`[RENDERER] ${new Date().toISOString()} - ${message}`, ...args);
+  },
+  error: (message, ...args) => {
+    console.error(`[RENDERER ERROR] ${new Date().toISOString()} - ${message}`, ...args);
+  },
+  debug: (message, ...args) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[RENDERER DEBUG] ${new Date().toISOString()} - ${message}`, ...args);
+    }
+  }
+};
+
+log.info('Renderer script loaded');
+
 // const { ipcRenderer } = require('electron');
 
 // DOM Elements
@@ -39,13 +56,30 @@ let settings = {
 
 // Initialize
 async function init() {
-    await loadSettings();
-    setupElements();
-    setupEventListeners();
-    updateUI();
-    
-    // Check license status and show paywall if needed
-    await checkLicenseStatus();
+    log.info('Initializing renderer...');
+    try {
+        await loadSettings();
+        log.info('Settings loaded');
+        
+        setupElements();
+        log.info('Elements setup complete');
+        
+        setupEventListeners();
+        log.info('Event listeners setup complete');
+        
+        updateUI();
+        log.info('UI updated');
+        
+        // Check license status and show paywall if needed
+        await checkLicenseStatus();
+        log.info('License status checked');
+        
+        log.info('Renderer initialization completed successfully');
+    } catch (error) {
+        log.error('Failed to initialize renderer:', error.message);
+        log.error('Init error stack:', error.stack);
+        throw error;
+    }
 }
 
 // Load settings from storage

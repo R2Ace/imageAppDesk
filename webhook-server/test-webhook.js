@@ -55,7 +55,7 @@ async function runTests() {
     console.log('\n🎉 All tests passed!');
 
   } catch (error) {
-    console.error('❌ Test failed:', error.response?data || error.message);
+    console.error('❌ Test failed:', error.response?.data || error.message);
   }
 }
 
