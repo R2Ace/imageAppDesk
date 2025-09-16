@@ -24,7 +24,13 @@ const Pricing = () => {
   const handlePurchase = async () => {
     // Check if running on localhost - show download link instead
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      alert('Localhost detected! Download the app directly from the desktop app folder.')
+      // For localhost, download the DMG file directly
+      const link = document.createElement('a')
+      link.href = '/Épure-1.0.0.dmg'
+      link.download = 'Épure-1.0.0.dmg'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
       return
     }
     
@@ -55,7 +61,11 @@ const Pricing = () => {
     "Metadata preservation options",
     "Works completely offline",
     "Lifetime updates & support",
-    "30-day money-back guarantee"
+    "30-day money-back guarantee",
+    "Coming Soon: Document conversion (PDF, Word, Excel)",
+    "Coming Soon: Video conversion (MP4, MOV, AVI, etc.)",
+    "Coming Soon: Audio conversion (MP3, WAV, FLAC, etc.)",
+    "Get ALL future conversions with this purchase!"
   ]
 
   return (
