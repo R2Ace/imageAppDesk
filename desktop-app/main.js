@@ -7,18 +7,48 @@ if (process.env.NODE_ENV !== 'production') {
   }
 }
 
-// Initialize Sentry crash reporting first
-const { initSentry } = require('./config/sentry');
-initSentry();
+// Initialize Sentry crash reporting first (with error handling)
+let initSentry;
+try {
+  const sentryModule = require('./config/sentry');
+  initSentry = sentryModule.initSentry;
+  initSentry();
+} catch (error) {
+  console.log('Sentry initialization failed:', error.message);
+}
 
-// Initialize analytics
-const analytics = require('./config/analytics');
+// Initialize analytics (with error handling)
+let analytics;
+try {
+  analytics = require('./config/analytics');
+  global.analytics = analytics;
+} catch (error) {
+  console.log('Analytics initialization failed:', error.message);
+  // Create a dummy analytics object
+  analytics = {
+    trackAppLaunched: () => {},
+    trackFileConverted: () => {},
+    trackBatchProcessing: () => {},
+    trackError: () => {}
+  };
+  global.analytics = analytics;
+}
 
-// Make analytics globally available for payment tracking
-global.analytics = analytics;
-
-// Initialize payment processor
-const paymentProcessor = require('./config/stripe');
+// Initialize payment processor (with error handling)
+let paymentProcessor;
+try {
+  paymentProcessor = require('./config/stripe');
+} catch (error) {
+  console.log('Payment processor initialization failed:', error.message);
+  // Create a dummy payment processor
+  paymentProcessor = {
+    isLicensed: () => false,
+    getLicenseInfo: () => null,
+    createPaymentIntent: () => Promise.reject(new Error('Payment not available')),
+    verifyPaymentAndActivate: () => Promise.reject(new Error('Payment not available')),
+    activateLicenseKey: () => Promise.reject(new Error('Payment not available'))
+  };
+}
 
 const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
 const { autoUpdater } = require('electron-updater');

@@ -98,7 +98,12 @@ class Analytics {
 // Export singleton instance
 const analytics = new Analytics();
 
-// Initialize with token from environment variable
-analytics.init(process.env.MIXPANEL_TOKEN || '464423c2d50d3113073d05faa473d76f');
+// Initialize with token from environment variable (only if available)
+try {
+  const mixpanelToken = process.env.MIXPANEL_TOKEN || '464423c2d50d3113073d05faa473d76f';
+  analytics.init(mixpanelToken);
+} catch (error) {
+  console.log('Analytics: Initialization failed, analytics disabled:', error.message);
+}
 
 module.exports = analytics;

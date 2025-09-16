@@ -80,7 +80,8 @@
       "icon": "build/icon.icns",
       "minimumSystemVersion": "10.15.0",
       "extendInfo": {
-        "CFBundleIconFile": "icon.icns"
+        "CFBundleIconFile": "icon.icns",
+        "CFBundleIconName": "icon.icns"
       }
     },
     "mas": {
@@ -121,7 +122,12 @@
       "!build/mas{,/**}",
       "!**/*.md"
     ],
-    "extraFiles": []
+    "extraFiles": [
+      {
+        "from": "build/icon.icns",
+        "to": "icon.icns"
+      }
+    ]
   },
   "repository": {
     "type": "git",

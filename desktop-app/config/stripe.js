@@ -186,10 +186,19 @@ class PaymentProcessor {
 // Export singleton instance
 const paymentProcessor = new PaymentProcessor();
 
-// Initialize with API key from environment
-const stripeKey = process.env.NODE_ENV === 'production' 
-  ? process.env.STRIPE_SECRET_KEY 
-  : process.env.STRIPE_TEST_SECRET_KEY;
-paymentProcessor.init(stripeKey);
+// Initialize with API key from environment (only if available)
+try {
+  const stripeKey = process.env.NODE_ENV === 'production' 
+    ? process.env.STRIPE_SECRET_KEY 
+    : process.env.STRIPE_TEST_SECRET_KEY;
+  
+  if (stripeKey) {
+    paymentProcessor.init(stripeKey);
+  } else {
+    console.log('Stripe: No API key found in environment, payments disabled');
+  }
+} catch (error) {
+  console.log('Stripe: Initialization failed, payments disabled:', error.message);
+}
 
 module.exports = paymentProcessor;
