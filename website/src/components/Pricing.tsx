@@ -24,9 +24,9 @@ const Pricing = () => {
   const handlePurchase = async () => {
     // Check if running on localhost - show download link instead
     if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-      // For localhost, download the DMG file directly
+      // For localhost, download the DMG file from the local server
       const link = document.createElement('a')
-      link.href = '/Épure-1.0.0.dmg'
+      link.href = 'http://localhost:3002/Épure-1.0.0.dmg'
       link.download = 'Épure-1.0.0.dmg'
       document.body.appendChild(link)
       link.click()
