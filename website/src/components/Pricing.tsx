@@ -22,6 +22,12 @@ const Pricing = () => {
   }, [])
 
   const handlePurchase = async () => {
+    // Check if running on localhost - show download link instead
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      alert('Localhost detected! Download the app directly from the desktop app folder.')
+      return
+    }
+    
     // Track purchase attempt
     if (typeof window !== 'undefined' && (window as any).mixpanel) {
       (window as any).mixpanel.track('Purchase Button Clicked', {

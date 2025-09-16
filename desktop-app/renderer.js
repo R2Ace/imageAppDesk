@@ -949,13 +949,6 @@ function setupElements() {
 // License and paywall functions
 async function checkLicenseStatus() {
     try {
-        // Skip paywall for localhost development
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.log('Localhost detected - enabling full functionality for development');
-            enableFullApp();
-            return;
-        }
-        
         const licenseResult = await window.electronAPI.checkLicense();
         
         if (!licenseResult.isLicensed) {
