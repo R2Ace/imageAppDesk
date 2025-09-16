@@ -4,8 +4,8 @@ echo "🧪 Testing Épure App Installation"
 echo "================================="
 
 # Check if DMG exists
-if [ -f "desktop-app/dist/Épure-1.0.0.dmg" ]; then
-    echo "✅ DMG file found"
+if [ -f "desktop-app/dist/Épure-1.0.0-arm64.dmg" ]; then
+    echo "✅ DMG file found (ARM64 version for Apple Silicon Macs)"
     
     # Start DMG server in background
     echo "🚀 Starting DMG server..."
@@ -17,7 +17,7 @@ if [ -f "desktop-app/dist/Épure-1.0.0.dmg" ]; then
     
     # Open the DMG
     echo "📦 Opening DMG file..."
-    open "desktop-app/dist/Épure-1.0.0.dmg"
+    open "desktop-app/dist/Épure-1.0.0-arm64.dmg"
     
     echo "✅ DMG opened! Follow the installation prompts."
     echo "📱 After installation, you can find Épure in your Applications folder."
