@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, FileImage, Upload, AlertTriangle, Crown } from 'lucide-react'
+import { CheckCircle, FileImage, Upload, AlertTriangle, Crown, Settings, X, Download, Check, AlertCircle } from 'lucide-react'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 import { fadeInUp, formatFileSize, generateRandomFileSize } from '../lib/utils'
@@ -11,12 +11,17 @@ interface FileDemo {
   name: string
   originalSize: number
   optimizedSize: number
-  status: 'waiting' | 'processing' | 'complete'
+  status: 'waiting' | 'processing' | 'complete' | 'error'
   progress: number
   size: number
   buffer?: ArrayBuffer
   format?: string
   quality?: number
+  newName?: string
+  downloadUrl?: string
+  savings?: number
+  error?: string
+  success?: boolean
 }
 
 const InteractiveDemo = () => {
@@ -28,6 +33,12 @@ const InteractiveDemo = () => {
   const [showUsageLimit, setShowUsageLimit] = useState(false)
   const [usageLimitMessage, setUsageLimitMessage] = useState('')
   const [showThankYou, setShowThankYou] = useState(false)
+  const [settings, setSettings] = useState({
+    format: 'jpeg',
+    quality: 0.8,
+    maxWidth: 1920,
+    maxHeight: 1080
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const createDemoFile = (name: string): FileDemo => {
@@ -109,29 +120,96 @@ const InteractiveDemo = () => {
     setShowUsageLimit(false)
   }
 
-  // Real file compression function
-  const compressImage = async (file: File): Promise<{ originalSize: number, compressedSize: number }> => {
+  // Convert a single image using Canvas API
+  const convertImage = (file: File, fileSettings?: { format: string, quality: number, maxWidth: number, maxHeight: number }): Promise<FileDemo> => {
     return new Promise((resolve) => {
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')!
       const img = new Image()
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      
+      if (!ctx) {
+        resolve({
+          id: Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          originalSize: file.size,
+          optimizedSize: 0,
+          status: 'error',
+          progress: 0,
+          size: file.size,
+          error: 'Canvas not supported',
+          success: false
+        })
+        return
+      }
+      
+      const currentSettings = fileSettings || settings
       
       img.onload = () => {
-        // Calculate new dimensions (max 1920px width)
-        const maxWidth = 1920
-        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
-        canvas.width = img.width * ratio
-        canvas.height = img.height * ratio
+        // Calculate new dimensions
+        let { width, height } = img
         
-        // Draw and compress
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        if (width > currentSettings.maxWidth || height > currentSettings.maxHeight) {
+          const ratio = Math.min(currentSettings.maxWidth / width, currentSettings.maxHeight / height)
+          width *= ratio
+          height *= ratio
+        }
         
+        // Set canvas dimensions
+        canvas.width = width
+        canvas.height = height
+        
+        // Draw and convert
+        ctx.drawImage(img, 0, 0, width, height)
+        
+        // Convert to blob
         canvas.toBlob((blob) => {
-          resolve({
-            originalSize: file.size,
-            compressedSize: blob!.size
-          })
-        }, 'image/jpeg', 0.8) // 80% quality
+          if (blob) {
+            const url = URL.createObjectURL(blob)
+            const originalSize = file.size
+            const newSize = blob.size
+            const savings = ((originalSize - newSize) / originalSize * 100)
+            
+            resolve({
+              id: Math.random().toString(36).substr(2, 9),
+              name: file.name,
+              originalSize,
+              optimizedSize: newSize,
+              status: 'complete',
+              progress: 100,
+              size: file.size,
+              newName: `${file.name.split('.')[0]}.${currentSettings.format === 'jpeg' ? 'jpg' : currentSettings.format}`,
+              downloadUrl: url,
+              savings: savings > 0 ? savings : 0,
+              success: true
+            })
+          } else {
+            resolve({
+              id: Math.random().toString(36).substr(2, 9),
+              name: file.name,
+              originalSize: file.size,
+              optimizedSize: 0,
+              status: 'error',
+              progress: 0,
+              size: file.size,
+              error: 'Conversion failed',
+              success: false
+            })
+          }
+        }, `image/${currentSettings.format}`, currentSettings.quality)
+      }
+      
+      img.onerror = () => {
+        resolve({
+          id: Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          originalSize: file.size,
+          optimizedSize: 0,
+          status: 'error',
+          progress: 0,
+          size: file.size,
+          error: 'Invalid image file',
+          success: false
+        })
       }
       
       img.src = URL.createObjectURL(file)
@@ -157,20 +235,18 @@ const InteractiveDemo = () => {
       return
     }
 
-    const newFiles: FileDemo[] = await Promise.all(
-      imageFiles.map(async (file) => ({
-        id: Math.random().toString(36).substr(2, 9),
-        name: file.name,
-        originalSize: file.size,
-        optimizedSize: 0,
-        status: 'waiting' as const,
-        progress: 0,
-        size: file.size,
-        buffer: await file.arrayBuffer(),
-        format: 'jpeg', // Default format
-        quality: 80 // Default quality
-      }))
-    )
+    const newFiles: FileDemo[] = imageFiles.map((file) => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      originalSize: file.size,
+      optimizedSize: 0,
+      status: 'waiting' as const,
+      progress: 0,
+      size: file.size,
+      buffer: undefined, // We'll load this when needed
+      format: settings.format,
+      quality: settings.quality * 100 // Convert to percentage
+    }))
     
     setFiles(newFiles)
     setShowSettings(false) // Show conversion interface directly
@@ -185,11 +261,12 @@ const InteractiveDemo = () => {
     }
   }
 
-  // Start processing with user settings
-  const startProcessingWithSettings = async () => {
-    setShowSettings(false)
+  // Process all images with conversion
+  const processImages = async () => {
+    if (files.length === 0) return
+    
     setIsProcessing(true)
-
+    
     // Get the actual files from the last file input
     const fileInput = fileInputRef.current
     if (!fileInput?.files) return
@@ -198,32 +275,55 @@ const InteractiveDemo = () => {
       file.type.startsWith('image/')
     )
 
-    // Process files with user settings
+    const processedResults: FileDemo[] = []
+    
     for (let i = 0; i < imageFiles.length; i++) {
       const file = imageFiles[i]
       const fileDemo = files[i]
       
+      // Update status to processing
       setFiles(prev => prev.map(f => 
         f.id === fileDemo.id 
-          ? { ...f, status: 'processing' as const }
+          ? { ...f, status: 'processing' as const, progress: 0 }
           : f
       ))
       
       try {
-        const result = await compressImage(file)
+        // Create file-specific settings
+        const fileSettings = {
+          format: fileDemo.format || settings.format,
+          quality: (fileDemo.quality || settings.quality * 100) / 100, // Convert back to decimal
+          maxWidth: settings.maxWidth,
+          maxHeight: settings.maxHeight
+        }
         
+        const result = await convertImage(file, fileSettings)
+        
+        // Update with result
         setFiles(prev => prev.map(f => 
           f.id === fileDemo.id 
             ? { 
                 ...f, 
-                status: 'complete' as const, 
-                optimizedSize: result.compressedSize,
+                ...result,
+                status: result.success ? 'complete' as const : 'error' as const,
                 progress: 100 
               }
             : f
         ))
+        
+        processedResults.push(result)
       } catch (error) {
-        console.error('Compression failed:', error)
+        console.error('Conversion failed:', error)
+        setFiles(prev => prev.map(f => 
+          f.id === fileDemo.id 
+            ? { 
+                ...f, 
+                status: 'error' as const,
+                error: 'Conversion failed',
+                success: false
+              }
+            : f
+        ))
       }
     }
 
@@ -272,6 +372,25 @@ const InteractiveDemo = () => {
       handleRealFiles(e.target.files)
     }
   }, [])
+
+  // Download functionality
+  const downloadFile = (file: FileDemo) => {
+    if (!file.downloadUrl) return
+    
+    const link = document.createElement('a')
+    link.href = file.downloadUrl
+    link.download = file.newName || file.name
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const downloadAll = () => {
+    const successfulFiles = files.filter(f => f.success && f.downloadUrl)
+    successfulFiles.forEach((file, index) => {
+      setTimeout(() => downloadFile(file), index * 100)
+    })
+  }
 
   return (
     <section id="demo" className="py-24 bg-secondary/50 relative overflow-hidden" data-tour="interactive-demo">
@@ -395,6 +514,82 @@ const InteractiveDemo = () => {
                   </div>
                 )}
 
+                {/* Settings Panel */}
+                {showSettings && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mb-6 p-4 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-gray-900">Conversion Settings</h3>
+                      <button
+                        onClick={() => setShowSettings(false)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Format
+                        </label>
+                        <select
+                          value={settings.format}
+                          onChange={(e) => setSettings(prev => ({ ...prev, format: e.target.value }))}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="jpeg">JPEG</option>
+                          <option value="png">PNG</option>
+                          <option value="webp">WebP</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Quality: {Math.round(settings.quality * 100)}%
+                        </label>
+                        <input
+                          type="range"
+                          min="0.1"
+                          max="1"
+                          step="0.05"
+                          value={settings.quality}
+                          onChange={(e) => setSettings(prev => ({ ...prev, quality: parseFloat(e.target.value) }))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Max Width (px)
+                        </label>
+                        <input
+                          type="number"
+                          value={settings.maxWidth}
+                          onChange={(e) => setSettings(prev => ({ ...prev, maxWidth: parseInt(e.target.value) || 1920 }))}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Max Height (px)
+                        </label>
+                        <input
+                          type="number"
+                          value={settings.maxHeight}
+                          onChange={(e) => setSettings(prev => ({ ...prev, maxHeight: parseInt(e.target.value) || 1080 }))}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Conversion Interface - Show when files are selected */}
                 {files.length > 0 && !showSettings && (
                   <motion.div
@@ -402,79 +597,71 @@ const InteractiveDemo = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-6"
                   >
-                    <div className="text-center">
-                      <h3 className="text-xl font-semibold mb-2">Choose Conversion Settings</h3>
-                      <p className="text-gray-600">Select output format and quality for each image</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {files.length} image{files.length !== 1 ? 's' : ''} ready
+                        </h3>
+                        <p className="text-gray-600">Configure settings and convert your images</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => setShowSettings(!showSettings)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Settings size={16} className="mr-2" />
+                          Settings
+                        </Button>
+                        <Button
+                          onClick={processImages}
+                          disabled={isProcessing}
+                          variant="premium"
+                          size="sm"
+                        >
+                          {isProcessing ? 'Converting...' : `Convert ${files.length} Image${files.length !== 1 ? 's' : ''}`}
+                        </Button>
+                      </div>
                     </div>
                     
-                    {/* Conversion List */}
-                    <div className="space-y-4 max-h-80 overflow-y-auto">
+                    {/* File List */}
+                    <div className="space-y-3 max-h-80 overflow-y-auto">
                       {files.map((file, index) => (
                         <div key={file.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                          {/* Image Preview */}
-                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
-                            {file.buffer ? (
-                              <img 
-                                src={URL.createObjectURL(new Blob([file.buffer]))}
-                                alt={file.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  e.currentTarget.parentElement!.innerHTML = '📷';
-                                }}
+                          {/* File Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 truncate">{file.name}</div>
+                            <div className="text-sm text-gray-500">{formatFileSize(file.size)}</div>
+                          </div>
+                          
+                          {/* Status Indicator */}
+                          <div className="flex items-center gap-2">
+                            {file.status === 'complete' && file.success ? (
+                              <Check size={20} className="text-green-600" />
+                            ) : file.status === 'error' ? (
+                              <AlertCircle size={20} className="text-red-600" />
+                            ) : file.status === 'processing' ? (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-2xl">📷</div>
+                              <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
                             )}
                           </div>
                           
-                          {/* File Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm text-gray-500">
-                              {(file.size / 1024 / 1024).toFixed(1)} MB • {file.name.split('.').pop()?.toUpperCase()}
-                            </div>
-                          </div>
-                          
-                          {/* Convert Arrow */}
-                          <div className="flex flex-col items-center px-4 py-2 bg-blue-50 rounded-lg">
-                            <span className="text-blue-600 text-lg">→</span>
-                            <span className="text-blue-600 text-xs font-semibold">CONVERT</span>
-                          </div>
-                          
-                          {/* Format Selection */}
-                          <div className="flex items-center gap-3">
-                            <select 
-                              className="px-3 py-2 border rounded-lg text-sm bg-white"
-                              value={file.format || 'jpeg'}
-                              onChange={(e) => {
-                                // Update file format in state
-                                setFiles(prev => prev.map((f, i) => 
-                                  i === index ? { ...f, format: e.target.value } : f
-                                ));
-                              }}
+                          {/* Download Button */}
+                          {file.status === 'complete' && file.success && file.downloadUrl && (
+                            <Button
+                              onClick={() => downloadFile(file)}
+                              variant="outline"
+                              size="sm"
                             >
-                              <option value="jpeg">JPEG</option>
-                              <option value="png">PNG</option>
-                              <option value="webp">WebP</option>
-                            </select>
-                            
-                            <div className="flex items-center gap-2">
-                              <input 
-                                type="range" 
-                                min="10" 
-                                max="100" 
-                                value={file.quality || 80}
-                                className="w-16"
-                                onChange={(e) => {
-                                  // Update quality in state
-                                  setFiles(prev => prev.map((f, i) => 
-                                    i === index ? { ...f, quality: parseInt(e.target.value) } : f
-                                  ));
-                                }}
-                              />
-                              <span className="text-xs text-gray-500 min-w-8">{file.quality || 80}%</span>
-                            </div>
-                          </div>
+                              <Download size={16} className="mr-2" />
+                              Download
+                            </Button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -489,96 +676,23 @@ const InteractiveDemo = () => {
                         variant="outline"
                         className="flex-1"
                       >
-                        Cancel
+                        Start Over
                       </Button>
-                      <Button
-                        onClick={() => {
-                          // Use individual file settings for processing
-                          startProcessingWithSettings()
-                        }}
-                        variant="premium"
-                        className="flex-1"
-                        disabled={isProcessing}
-                      >
-                        {isProcessing ? 'Processing...' : `Convert ${files.length} Images`}
-                      </Button>
+                      {files.some(f => f.success && f.downloadUrl) && (
+                        <Button
+                          onClick={downloadAll}
+                          variant="premium"
+                          className="flex-1"
+                        >
+                          <Download size={16} className="mr-2" />
+                          Download All
+                        </Button>
+                      )}
                     </div>
                   </motion.div>
                 )}
 
 
-                {/* File Processing List */}
-                <AnimatePresence>
-                  {files.length > 0 && !showSettings && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-4"
-                    >
-                      {files.map((file, index) => (
-                        <motion.div
-                          key={file.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="bg-gray-50 rounded-xl p-4 border"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-3 h-3 rounded-full ${
-                                file.status === 'complete' ? 'bg-green-500' :
-                                file.status === 'processing' ? 'bg-blue-500 animate-pulse' :
-                                'bg-gray-400'
-                              }`} />
-                              <span className="font-medium text-foreground">{file.name}</span>
-                            </div>
-                            
-                            {file.status === 'complete' && (
-                              <CheckCircle className="w-5 h-5 text-green-500" />
-                            )}
-                          </div>
-                          
-                          <div className="grid grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <div className="text-muted-foreground">Original</div>
-                              <div className="font-semibold">{formatFileSize(file.originalSize)}</div>
-                            </div>
-                            <div>
-                              <div className="text-muted-foreground">Optimized</div>
-                              <div className="font-semibold text-green-600">
-                                {file.status === 'complete' ? formatFileSize(file.optimizedSize) : '—'}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-muted-foreground">Saved</div>
-                              <div className="font-semibold text-primary">
-                                {file.status === 'complete' 
-                                  ? `${Math.round(((file.originalSize - file.optimizedSize) / file.originalSize) * 100)}%`
-                                  : '—'
-                                }
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Progress Bar */}
-                          {file.status === 'processing' && (
-                            <div className="mt-3">
-                              <div className="bg-gray-200 rounded-full h-2">
-                                <motion.div
-                                  className="bg-primary h-2 rounded-full"
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${file.progress}%` }}
-                                  transition={{ duration: 0.1 }}
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
                 {/* Summary Stats */}
                 {totalSaved > 0 && (
@@ -593,6 +707,83 @@ const InteractiveDemo = () => {
                     <p className="text-muted-foreground">
                       Processing completed in just a few seconds with zero cloud uploads
                     </p>
+                  </motion.div>
+                )}
+
+                {/* Conversion Results Summary */}
+                {files.some(f => f.status === 'complete') && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Conversion Results
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      {files.filter(f => f.status === 'complete').map((file, index) => (
+                        <div key={file.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            {file.success ? (
+                              <Check size={20} className="text-green-600" />
+                            ) : (
+                              <AlertCircle size={20} className="text-red-600" />
+                            )}
+                            
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {file.success ? file.newName : file.name}
+                              </div>
+                              {file.success ? (
+                                <div className="text-sm text-gray-600">
+                                  {formatFileSize(file.originalSize)} → {formatFileSize(file.optimizedSize)}
+                                  {file.savings && file.savings > 0 && (
+                                    <span className="text-green-600 ml-2">
+                                      ({file.savings.toFixed(1)}% smaller)
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-sm text-red-600">{file.error}</div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {file.success && file.downloadUrl && (
+                            <Button
+                              onClick={() => downloadFile(file)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Download size={16} className="mr-2" />
+                              Download
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-blue-800 font-medium mb-2">
+                        ⚡ Want 3x faster processing + advanced features?
+                      </p>
+                      <p className="text-blue-700 text-sm mb-3">
+                        The desktop app processes images up to 3x faster with HEIC support, metadata removal, batch operations, and more formats.
+                      </p>
+                      <Button 
+                        onClick={() => {
+                          const pricingSection = document.getElementById('pricing')
+                          if (pricingSection) {
+                            pricingSection.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                        variant="premium"
+                        size="sm"
+                      >
+                        Download Desktop App - $9 Lifetime
+                      </Button>
+                    </div>
                   </motion.div>
                 )}
               </div>
