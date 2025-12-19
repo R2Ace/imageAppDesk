@@ -62,5 +62,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openPaymentUrl: (url) => ipcRenderer.invoke('open-payment-url', url),
   
   // External links
-  openExternal: (url) => ipcRenderer.invoke('open-external', url)
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+
+  // Audio processing
+  checkFFmpeg: () => ipcRenderer.invoke('check-ffmpeg'),
+  getAudioMetadata: (filePath) => ipcRenderer.invoke('get-audio-metadata', filePath),
+  convertAudio: (inputPath, outputFormat, options) => 
+    ipcRenderer.invoke('convert-audio', { inputPath, outputFormat, options }),
+  batchConvertAudio: (inputPaths, outputFormat, options) => 
+    ipcRenderer.invoke('batch-convert-audio', { inputPaths, outputFormat, options }),
+  getAudioFormats: () => ipcRenderer.invoke('get-audio-formats'),
+  
+  // Audio conversion progress listeners
+  onAudioProgress: (callback) => {
+    ipcRenderer.on('audio-conversion-progress', (event, data) => callback(data));
+  },
+  onAudioBatchProgress: (callback) => {
+    ipcRenderer.on('audio-batch-progress', (event, data) => callback(data));
+  },
+  removeAudioProgressListeners: () => {
+    ipcRenderer.removeAllListeners('audio-conversion-progress');
+    ipcRenderer.removeAllListeners('audio-batch-progress');
+  }
 }); 

@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
-import Hero from './components/Hero'
+import ConverterHero from './components/ConverterHero'
+import SocialProof from './components/SocialProof'
 import Features from './components/Features'
-import InteractiveDemo from './components/InteractiveDemo'
-import Pricing from './components/Pricing'
+import WaitlistCTA from './components/WaitlistCTA'
 import Footer from './components/Footer'
-import StickyDownloadBar from './components/StickyDownloadBar'
+import StickyWaitlistBar from './components/StickyWaitlistBar'
 
 import { initMixpanel, trackEvent } from './lib/mixpanel'
 
@@ -15,21 +15,21 @@ function App() {
     
     // Track page view
     trackEvent('React Landing Page Visit', {
-      page: 'Modern Homepage',
-      design_version: 'react_typescript_v1',
+      page: 'Waitlist Landing',
+      design_version: 'waitlist_v1',
       timestamp: new Date().toISOString()
     })
   }, [])
 
   return (
-    <div className="min-h-screen bg-white">
-      <StickyDownloadBar />
+    <div className="min-h-screen bg-background">
+      <StickyWaitlistBar />
       
       <main>
-        <Hero />
+        <ConverterHero />
+        <SocialProof />
         <Features />
-        <InteractiveDemo />
-        <Pricing />
+        <WaitlistCTA />
       </main>
       
       <Footer />

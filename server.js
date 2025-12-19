@@ -213,8 +213,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'payment',
-      success_url: successUrl || 'https://epure-jrgzo2soz-r2aces-projects.vercel.app/success',
-      cancel_url: cancelUrl || 'https://epure-jrgzo2soz-r2aces-projects.vercel.app/',
+      success_url: successUrl || process.env.SUCCESS_URL || 'https://epure.app/success',
+      cancel_url: cancelUrl || process.env.CANCEL_URL || 'https://epure.app/',
       metadata: {
         product: 'epure_license'
       }

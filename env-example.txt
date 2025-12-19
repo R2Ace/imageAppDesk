@@ -17,6 +17,13 @@ PORT=3001
 NODE_ENV=development
 
 # App URLs
-APP_DOWNLOAD_URL_MAC=https://your-domain.com/downloads/epure-mac.dmg
-APP_DOWNLOAD_URL_WINDOWS=https://your-domain.com/downloads/epure-windows.exe
-WEBSITE_URL=https://your-domain.com
+APP_DOWNLOAD_URL_MAC=https://epure.app/downloads/epure-mac.dmg
+APP_DOWNLOAD_URL_WINDOWS=https://epure.app/downloads/epure-windows.exe
+WEBSITE_URL=https://epure.app
+
+# Payment Redirect URLs (for Stripe Checkout)
+SUCCESS_URL=https://epure.app/success
+CANCEL_URL=https://epure.app/
+
+# API Configuration (for desktop app)
+API_URL=https://epure-api.railway.app

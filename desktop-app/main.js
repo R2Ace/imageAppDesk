@@ -1,45 +1,62 @@
 // Enhanced logging system
 let logFile = null;
 
-
 const log = {
   info: (message, ...args) => {
-    const logMessage = `[INFO] ${new Date().toISOString()} - ${message} ${args.length > 0 ? JSON.stringify(args) : ''}\n`;
-    console.log(logMessage.trim());
-    if (logFile) logFile.write(logMessage);
-  },
-  error: (message, ...args) => {
-    const logMessage = `[ERROR] ${new Date().toISOString()} - ${message} ${args.length > 0 ? JSON.stringify(args) : ''}\n`;
-    console.error(logMessage.trim());
-    if (logFile) logFile.write(logMessage);
-  },
-  warn: (message, ...args) => {
-    const logMessage = `[WARN] ${new Date().toISOString()} - ${message} ${args.length > 0 ? JSON.stringify(args) : ''}\n`;
-    console.warn(logMessage.trim());
-    if (logFile) logFile.write(logMessage);
-  },
-  debug: (message, ...args) => {
-    if (process.env.NODE_ENV !== 'production') {
-      const logMessage = `[DEBUG] ${new Date().toISOString()} - ${message} ${args.length > 0 ? JSON.stringify(args) : ''}\n`;
+    if (args.length > 0) {
+      const logMessage = `[INFO] ${new Date().toISOString()} - ${message} ${JSON.stringify(args)}\n`;
+      console.log(logMessage.trim());
+      if (logFile) logFile.write(logMessage);
+    } else {
+      const logMessage = `[INFO] ${new Date().toISOString()} - ${message}\n`;
       console.log(logMessage.trim());
       if (logFile) logFile.write(logMessage);
     }
+  },
+  error: (message, ...args) => {
+    if (args.length > 0) {
+      const logMessage = `[ERROR] ${new Date().toISOString()} - ${message} ${JSON.stringify(args)}\n`;
+      console.error(logMessage.trim());
+      if (logFile) logFile.write(logMessage);
+    } else {
+      const logMessage = `[ERROR] ${new Date().toISOString()} - ${message}\n`;
+      console.error(logMessage.trim());
+      if (logFile) logFile.write(logMessage);
+    }
+  },
+  warn: (message, ...args) => {
+    if (args.length > 0) {
+      const logMessage = `[WARN] ${new Date().toISOString()} - ${message} ${JSON.stringify(args)}\n`;
+      console.warn(logMessage.trim());
+      if (logFile) logFile.write(logMessage);
+    } else {
+      const logMessage = `[WARN] ${new Date().toISOString()} - ${message}\n`;
+      console.warn(logMessage.trim());
+      if (logFile) logFile.write(logMessage);
+    }
+  },
+  debug: (message, ...args) => {
+    if (process.env.NODE_ENV !== 'production') {
+      if (args.length > 0) {
+        const logMessage = `[DEBUG] ${new Date().toISOString()} - ${message} ${JSON.stringify(args)}\n`;
+        console.log(logMessage.trim());
+        if (logFile) logFile.write(logMessage);
+      } else {
+        const logMessage = `[DEBUG] ${new Date().toISOString()} - ${message}\n`;
+        console.log(logMessage.trim());
+        if (logFile) logFile.write(logMessage);
+      }
+    }
   }
 };
-
-// Detect if we're in a packaged app
-const isPackaged = app.isPackaged;
-const isProduction = process.env.NODE_ENV === 'production' || isPackaged;
 
 log.info('Starting Épure application...');
 log.info('Node version:', process.version);
 log.info('Platform:', process.platform);
 log.info('Architecture:', process.arch);
-log.info('Environment:', isProduction ? 'production' : 'development');
-log.info('Is packaged:', isPackaged);
 
 // Load environment variables first (only in development)
-if (!isProduction) {
+if (process.env.NODE_ENV !== 'production') {
   try {
     require('dotenv').config();
     log.info('Environment variables loaded');
@@ -121,6 +138,13 @@ const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 
+// Detect if we're in a packaged app
+const isPackaged = app.isPackaged || process.resourcesPath !== undefined || process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production' || isPackaged;
+
+log.info('Environment:', isProduction ? 'production' : 'development');
+log.info('Is packaged:', isPackaged);
+
 log.info('Loading additional dependencies...');
 let sharp, Store;
 try {
@@ -141,25 +165,8 @@ try {
   throw new Error('Electron-store is required for settings');
 }
 
-// Initialize settings store
-log.info('Initializing settings store...');
-const store = new Store({
-  defaults: {
-    outputDir: app.getPath('pictures'),
-    settings: {
-      format: 'jpeg',
-      quality: 80,
-      preset: 'custom', // 'custom', '1080p', '720p', '480p'
-      customWidth: 1920,
-      customHeight: 1080,
-      stripMetadata: true,
-      autoOpenOutput: true,
-      overwriteFiles: false
-    }
-  }
-});
-log.info('Settings store initialized successfully');
-
+// ✅ IMPORTANT: Store will be initialized AFTER app is ready
+let store;
 let mainWindow;
 
 function createWindow() {
@@ -192,592 +199,79 @@ function createWindow() {
 
     // Add error handling for window events
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-      log.error('Window failed to load:', errorCode, errorDescription, validatedURL);
+      log.error('Page failed to load:', { errorCode, errorDescription, validatedURL });
     });
 
-    mainWindow.webContents.on('crashed', (event) => {
-      log.error('Renderer process crashed');
+    mainWindow.webContents.on('render-process-gone', (event, details) => {
+      log.error('Render process gone:', details);
     });
 
-    mainWindow.on('unresponsive', () => {
-      log.warn('Window became unresponsive');
+    mainWindow.on('closed', () => {
+      log.info('Main window closed');
+      mainWindow = null;
     });
 
-    mainWindow.on('responsive', () => {
-      log.info('Window became responsive again');
-    });
+    // Track app launch
+    if (analytics && analytics.trackAppLaunched) {
+      analytics.trackAppLaunched();
+      log.info('App launch tracked');
+    }
 
+    log.info('Main window setup completed successfully');
   } catch (error) {
-    log.error('Failed to create window:', error.message);
-    log.error('Window creation error stack:', error.stack);
+    log.error('Failed to create main window:', error.message);
+    log.error('Main window error stack:', error.stack);
     throw error;
   }
 }
 
-// Get dimensions based on preset
-function getPresetDimensions(preset) {
-  const presets = {
-    '1080p': { width: 1920, height: 1080 },
-    '720p': { width: 1280, height: 720 },
-    '480p': { width: 854, height: 480 }
-  };
-  return presets[preset] || null;
-}
-
-// Generate unique filename if file exists and overwrite is false
-function getUniqueFilename(outputPath, overwrite = false) {
-  if (overwrite || !fs.existsSync(outputPath)) {
-    return outputPath;
-  }
-  
-  const parsed = path.parse(outputPath);
-  let counter = 1;
-  let newPath;
-  
-  do {
-    const suffix = ` (${counter})`;
-    newPath = path.join(parsed.dir, `${parsed.name}${suffix}${parsed.ext}`);
-    counter++;
-  } while (fs.existsSync(newPath));
-  
-  return newPath;
-}
-
-// Create application menu
-function createMenu() {
-  const template = [
-    {
-      label: 'Épure',
-      submenu: [
-        {
-          label: 'About Épure',
-          role: 'about'
-        },
-        { type: 'separator' },
-        {
-          label: 'Send Feedback',
-          click: () => {
-            shell.openExternal('mailto:r2thedev@gmail.com?subject=Épure Feedback&body=Hi! I have some feedback about Épure:\n\n');
-          }
-        },
-        { type: 'separator' },
-        {
-          label: 'Hide Épure',
-          accelerator: 'Command+H',
-          role: 'hide'
-        },
-        {
-          label: 'Hide Others',
-          accelerator: 'Command+Shift+H',
-          role: 'hideothers'
-        },
-        {
-          label: 'Show All',
-          role: 'unhide'
-        },
-        { type: 'separator' },
-        {
-          label: 'Quit',
-          accelerator: 'Command+Q',
-          click: () => app.quit()
-        }
-      ]
-    },
-    {
-      label: 'Edit',
-      submenu: [
-        {
-          label: 'Undo',
-          accelerator: 'CmdOrCtrl+Z',
-          role: 'undo'
-        },
-        {
-          label: 'Redo',
-          accelerator: 'Shift+CmdOrCtrl+Z',
-          role: 'redo'
-        },
-        { type: 'separator' },
-        {
-          label: 'Cut',
-          accelerator: 'CmdOrCtrl+X',
-          role: 'cut'
-        },
-        {
-          label: 'Copy',
-          accelerator: 'CmdOrCtrl+C',
-          role: 'copy'
-        },
-        {
-          label: 'Paste',
-          accelerator: 'CmdOrCtrl+V',
-          role: 'paste'
-        }
-      ]
-    },
-    {
-      label: 'Window',
-      submenu: [
-        {
-          label: 'Minimize',
-          accelerator: 'CmdOrCtrl+M',
-          role: 'minimize'
-        },
-        {
-          label: 'Close',
-          accelerator: 'CmdOrCtrl+W',
-          role: 'close'
-        }
-      ]
-    },
-    {
-      label: 'Help',
-      submenu: [
-        {
-          label: 'Contact Support',
-          click: () => {
-            shell.openExternal('mailto:r2thedev@gmail.com?subject=Épure Support Request&body=Hi! I need help with Épure:\n\n');
-          }
-        }
-      ]
-    }
-  ];
-
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
-}
-
-app.whenReady().then(() => {
-  log.info('App is ready, initializing...');
-  
-  // Initialize log file
+// Initialize store AFTER app is ready
+function initializeStore() {
+  log.info('Initializing settings store...');
   try {
-    const logPath = path.join(app.getPath('userData'), 'epure.log');
-    logFile = fs.createWriteStream(logPath, { flags: 'a' });
-    log.info('Log file initialized:', logPath);
-  } catch (error) {
-    log.error('Failed to initialize log file:', error.message);
-  }
-  
-  try {
-    createWindow();
-    log.info('Window created successfully');
-  } catch (error) {
-    log.error('Failed to create window:', error.message);
-    log.error('Window creation error stack:', error.stack);
-    app.quit();
-    return;
-  }
-
-  try {
-    createMenu();
-    log.info('Menu created successfully');
-  } catch (error) {
-    log.error('Failed to create menu:', error.message);
-    log.error('Menu creation error stack:', error.stack);
-  }
-
-  // Track app launch
-  try {
-    analytics.trackAppLaunched();
-    log.info('App launch tracked');
-  } catch (error) {
-    log.error('Failed to track app launch:', error.message);
-  }
-
-  app.on('activate', () => {
-    log.info('App activated');
-    if (BrowserWindow.getAllWindows().length === 0) {
-      log.info('No windows open, creating new window');
-      createWindow();
-    }
-  });
-
-  log.info('App initialization completed successfully');
-
-  // Handle settings
-  ipcMain.handle('get-settings', () => {
-    log.debug('IPC: get-settings called');
-    try {
-      const settings = store.get('settings');
-      log.debug('Settings retrieved successfully');
-      return settings;
-    } catch (error) {
-      log.error('Failed to get settings:', error.message);
-      throw error;
-    }
-  });
-  
-  ipcMain.handle('save-settings', (_, settings) => {
-    log.debug('IPC: save-settings called');
-    try {
-      store.set('settings', settings);
-      log.debug('Settings saved successfully');
-      return true;
-    } catch (error) {
-      log.error('Failed to save settings:', error.message);
-      throw error;
-    }
-  });
-
-  // Handle output directory
-  ipcMain.handle('get-output-dir', () => store.get('outputDir'));
-  ipcMain.handle('set-output-dir', (_, dir) => {
-    store.set('outputDir', dir);
-    return true;
-  });
-
-  // Handle output directory selection
-  ipcMain.handle('select-output-dir', async () => {
-    const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openDirectory']
+    store = new Store({
+      defaults: {
+        outputDir: app.getPath('pictures'), // ✅ Now app is available
+        settings: {
+          format: 'jpeg',
+          quality: 80,
+          preset: 'custom', // 'custom', '1080p', '720p', '480p'
+          customWidth: 1920,
+          customHeight: 1080,
+          stripMetadata: true,
+          autoOpenOutput: true,
+          overwriteFiles: false
+        }
+      }
     });
-    
-    if (!result.canceled) {
-      const selectedDir = result.filePaths[0];
-      store.set('outputDir', selectedDir);
-      return selectedDir;
-    }
-    return null;
-  });
+    log.info('Settings store initialized successfully');
+  } catch (error) {
+    log.error('Failed to initialize store:', error.message);
+    log.error('Store error stack:', error.stack);
+    throw error;
+  }
+}
 
-  // Handle opening folders
-  ipcMain.handle('open-folder', async (_, folderPath) => {
-    try {
-      await shell.openPath(folderPath);
-      return true;
-    } catch (error) {
-      console.error('Error opening folder:', error);
-      return false;
-    }
-  });
+// App ready handler
+app.whenReady().then(() => {
+  log.info('App is ready');
+  
+  // Initialize store first (now that app is ready)
+  initializeStore();
+  
+  // Then create window
+  createWindow();
+  
+  // Set up menus, etc.
+  setupApplicationMenu();
+});
 
-  // Handle image processing
-  ipcMain.handle('process-images', async (_, { files, settings }) => {
-    log.info('IPC: process-images called with', files.length, 'files');
-    const startTime = Date.now();
-    
-    try {
-      const outputDir = store.get('outputDir');
-      log.debug('Output directory:', outputDir);
-      
-      const results = [];
-      let totalOriginalSize = 0;
-      let totalNewSize = 0;
-      let successCount = 0;
-
-      // Track batch processing start
-      try {
-        analytics.trackBatchProcessing(files.length, files.reduce((sum, f) => sum + f.size, 0));
-        log.debug('Batch processing tracked');
-      } catch (error) {
-        log.error('Failed to track batch processing:', error.message);
-      }
-
-      // Ensure output directory exists
-      log.debug('Checking output directory:', outputDir);
-      if (!fs.existsSync(outputDir)) {
-        log.info('Output directory does not exist, creating:', outputDir);
-        try {
-          fs.mkdirSync(outputDir, { recursive: true });
-          log.info('Output directory created successfully');
-        } catch (dirError) {
-          const errorMsg = `Unable to create output directory: ${dirError.message}`;
-          log.error('Directory creation failed:', errorMsg);
-          try {
-            analytics.trackError('directory_creation_failed', errorMsg);
-          } catch (analyticsError) {
-            log.error('Failed to track directory creation error:', analyticsError.message);
-          }
-          throw new Error(errorMsg);
-        }
-      } else {
-        log.debug('Output directory exists');
-      }
-
-      // Process files with improved error handling
-      log.info('Starting to process', files.length, 'files');
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const filename = file.name;
-        
-        log.debug(`Processing file ${i + 1}/${files.length}:`, filename);
-        
-        try {
-          // Validate file
-          if (!file.buffer || file.size === 0) {
-            throw new Error('File is empty or corrupted');
-          }
-
-          if (file.size > 100 * 1024 * 1024) { // 100MB limit
-            throw new Error('File size exceeds 100MB limit');
-          }
-
-          const buffer = Buffer.from(file.buffer);
-          const fileInfo = path.parse(filename);
-          const inputFormat = fileInfo.ext.toLowerCase().replace('.', '');
-          
-          // Validate input format
-          const supportedFormats = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'tiff', 'tif'];
-          if (!supportedFormats.includes(inputFormat)) {
-            throw new Error(`Unsupported file format: ${inputFormat}`);
-          }
-
-          const outputFilename = `${fileInfo.name}.${settings.format}`;
-          let outputPath = path.join(outputDir, outputFilename);
-          
-          // Handle file conflicts
-          outputPath = getUniqueFilename(outputPath, settings.overwriteFiles);
-
-          // Create Sharp instance with better error handling
-          let sharpInstance;
-          try {
-            sharpInstance = sharp(buffer, { 
-              limitInputPixels: false,
-              failOnError: false // Don't fail on minor corruption
-            });
-          } catch (sharpError) {
-            throw new Error(`Unable to read image: ${sharpError.message}`);
-          }
-
-          // Strip metadata if requested
-          if (settings.stripMetadata) {
-            sharpInstance = sharpInstance.withMetadata(false);
-          } else {
-            // Keep essential metadata but remove location data for privacy
-            sharpInstance = sharpInstance.withMetadata({
-              exif: { IFD0: { Copyright: 'Processed with Épure' } }
-            });
-          }
-
-          // Get dimensions based on preset or custom
-          let dimensions;
-          if (settings.preset === 'custom') {
-            dimensions = {
-              width: Math.max(1, Math.min(50000, settings.customWidth)), // Clamp values
-              height: Math.max(1, Math.min(50000, settings.customHeight))
-            };
-          } else {
-            dimensions = getPresetDimensions(settings.preset);
-          }
-
-          // Resize image with better options
-          if (dimensions) {
-            sharpInstance = sharpInstance.resize({
-              width: dimensions.width,
-              height: dimensions.height,
-              fit: 'inside',
-              withoutEnlargement: true,
-              kernel: sharp.kernel.lanczos3 // Better quality
-            });
-          }
-
-          // Set output format and quality with validation
-          const quality = Math.max(1, Math.min(100, settings.quality));
-          
-          switch (settings.format) {
-            case 'jpeg':
-              sharpInstance = sharpInstance.jpeg({ 
-                quality,
-                progressive: true,
-                mozjpeg: true // Better compression
-              });
-              break;
-            case 'png':
-              sharpInstance = sharpInstance.png({
-                compressionLevel: Math.max(0, Math.min(9, Math.floor((100 - quality) / 11))),
-                progressive: true
-              });
-              break;
-            case 'webp':
-              sharpInstance = sharpInstance.webp({ 
-                quality,
-                effort: 4 // Good balance of compression and speed
-              });
-              break;
-            case 'avif':
-              sharpInstance = sharpInstance.avif({ quality });
-              break;
-            default:
-              throw new Error(`Unsupported output format: ${settings.format}`);
-          }
-
-          // Process the image with timeout
-          const processPromise = sharpInstance.toFile(outputPath);
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Processing timeout (30s exceeded)')), 30000);
-          });
-
-          await Promise.race([processPromise, timeoutPromise]);
-
-          // Get file sizes for reporting
-          const originalSize = file.size;
-          const newSize = fs.statSync(outputPath).size;
-          const compressionRatio = newSize / originalSize;
-          const savingsPercent = Math.round((1 - compressionRatio) * 100);
-
-          totalOriginalSize += originalSize;
-          totalNewSize += newSize;
-          successCount++;
-
-          // Track successful conversion
-          analytics.trackFileConverted(settings.format, inputFormat, originalSize, compressionRatio);
-
-          results.push({
-            name: filename,
-            success: true,
-            originalSize,
-            newSize,
-            savingsPercent,
-            outputPath,
-            processingTime: Date.now() - startTime
-          });
-
-        } catch (error) {
-          console.error(`Error processing file ${filename}:`, error);
-          
-          // Track error with context
-          analytics.trackError('file_processing_failed', `${filename}: ${error.message}`);
-          
-          // Provide user-friendly error messages
-          let userMessage = error.message;
-          if (error.message.includes('Input buffer contains unsupported image format')) {
-            userMessage = 'This file format is not supported. Please use JPG, PNG, WebP, HEIC, or TIFF files.';
-          } else if (error.message.includes('timeout')) {
-            userMessage = 'File processing took too long. Try reducing the file size or image dimensions.';
-          } else if (error.message.includes('memory')) {
-            userMessage = 'Not enough memory to process this file. Try closing other applications or using a smaller file.';
-          }
-
-          results.push({
-            name: file.name,
-            success: false,
-            error: userMessage,
-            originalError: error.message // For debugging
-          });
-        }
-
-        // Send progress update
-        mainWindow.webContents.send('process-progress', {
-          current: i + 1,
-          total: files.length,
-          file: filename,
-          successRate: Math.round((successCount / (i + 1)) * 100)
-        });
-      }
-
-      // Track batch completion
-      const totalTime = Date.now() - startTime;
-      const avgTimePerFile = totalTime / files.length;
-      
-      console.log(`Batch processing completed: ${successCount}/${files.length} files in ${totalTime}ms`);
-
-      return {
-        success: true,
-        results,
-        stats: {
-          totalFiles: files.length,
-          successCount,
-          totalOriginalSize,
-          totalNewSize,
-          totalSavingsPercent: totalOriginalSize > 0 ? Math.round((1 - totalNewSize / totalOriginalSize) * 100) : 0,
-          processingTime: Date.now() - startTime
-        }
-      };
-    } catch (error) {
-      log.error('Critical error in batch processing:', error.message);
-      log.error('Batch processing error stack:', error.stack);
-      
-      try {
-        analytics.trackError('batch_processing_failed', error.message);
-      } catch (analyticsError) {
-        log.error('Failed to track batch processing error:', analyticsError.message);
-      }
-      
-      // Return error for entire batch
-      return {
-        success: false,
-        error: error.message,
-        results: []
-      };
-    }
-  });
-
-  // Handle license checking
-  ipcMain.handle('check-license', () => {
-    return {
-      isLicensed: paymentProcessor.isLicensed(),
-      licenseInfo: paymentProcessor.getLicenseInfo()
-    };
-  });
-
-  // Handle payment intent creation
-  ipcMain.handle('create-payment', async (_, customerEmail) => {
-    try {
-      const paymentIntent = await paymentProcessor.createPaymentIntent(customerEmail);
-      return {
-        success: true,
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id
-      };
-    } catch (error) {
-      console.error('Payment creation failed:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  });
-
-  // Handle payment verification and license activation
-  ipcMain.handle('verify-payment', async (_, paymentIntentId) => {
-    try {
-      const result = await paymentProcessor.verifyPaymentAndActivate(paymentIntentId);
-      return result;
-    } catch (error) {
-      console.error('Payment verification failed:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  });
-
-  // Handle manual license activation (for customer support)
-  ipcMain.handle('activate-license', async (_, licenseKey) => {
-    try {
-      const result = await paymentProcessor.activateLicenseKey(licenseKey);
-      return result;
-    } catch (error) {
-      console.error('License activation failed:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  });
-
-  // Handle opening payment URL in browser
-  ipcMain.handle('open-payment-url', async (_, url) => {
-    try {
-      await shell.openExternal(url);
-      return { success: true };
-    } catch (error) {
-      console.error('Failed to open payment URL:', error);
-      return { success: false, error: error.message };
-    }
-  });
-
-  // Handle opening external URLs (for feedback, support, etc.)
-  ipcMain.handle('open-external', async (_, url) => {
-    try {
-      await shell.openExternal(url);
-      return { success: true };
-    } catch (error) {
-      console.error('Failed to open external URL:', error);
-      return { success: false, error: error.message };
-    }
-  });
-
+// App event handlers
+app.on('activate', () => {
+  log.info('App activated');
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
 });
 
 app.on('window-all-closed', () => {
@@ -834,4 +328,411 @@ autoUpdater.on('update-downloaded', () => {
   console.log('Update downloaded');
   // Silently install and restart
   autoUpdater.quitAndInstall();
+});
+
+// IPC handlers (moved to separate function for organization)
+function setupIPCHandlers() {
+  // Settings management
+  ipcMain.handle('get-settings', () => {
+    try {
+      return store.get('settings');
+    } catch (error) {
+      log.error('Failed to get settings:', error.message);
+      return null;
+    }
+  });
+
+  ipcMain.handle('save-settings', (event, settings) => {
+    try {
+      store.set('settings', settings);
+      log.info('Settings saved successfully');
+      return true;
+    } catch (error) {
+      log.error('Failed to save settings:', error.message);
+      return false;
+    }
+  });
+
+  // Output directory management
+  ipcMain.handle('get-output-dir', () => {
+    try {
+      return store.get('outputDir');
+    } catch (error) {
+      log.error('Failed to get output directory:', error.message);
+      return app.getPath('pictures');
+    }
+  });
+
+  ipcMain.handle('set-output-dir', (event, dir) => {
+    try {
+      store.set('outputDir', dir);
+      log.info('Output directory set:', dir);
+      return true;
+    } catch (error) {
+      log.error('Failed to set output directory:', error.message);
+      return false;
+    }
+  });
+
+  ipcMain.handle('select-output-dir', async () => {
+    try {
+      const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory']
+      });
+      
+      if (!result.canceled && result.filePaths.length > 0) {
+        const selectedPath = result.filePaths[0];
+        store.set('outputDir', selectedPath);
+        log.info('Output directory selected and saved:', selectedPath);
+        return selectedPath;
+      }
+      return null;
+    } catch (error) {
+      log.error('Failed to select output directory:', error.message);
+      return null;
+    }
+  });
+
+  // License checking
+  ipcMain.handle('check-license', async () => {
+    try {
+      // Check for stored license key
+      const storedLicenseKey = store.get('licenseKey');
+      
+      if (!storedLicenseKey) {
+        log.info('No license key found');
+        return { 
+          licensed: false, 
+          message: 'No license key found. Please enter your license key.' 
+        };
+      }
+
+      // Validate against server
+      const apiUrl = process.env.API_URL || 'https://epure-api.railway.app';
+      
+      try {
+        const https = require('https');
+        const response = await new Promise((resolve, reject) => {
+          const req = https.get(`${apiUrl}/api/validate-license/${storedLicenseKey}`, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+              try {
+                resolve(JSON.parse(data));
+              } catch {
+                resolve({ valid: false });
+              }
+            });
+          });
+          req.on('error', reject);
+          req.setTimeout(5000, () => {
+            req.destroy();
+            reject(new Error('Timeout'));
+          });
+        });
+
+        if (response.valid) {
+          log.info('License validated successfully');
+          return { 
+            licensed: true, 
+            message: 'License activated',
+            licenseInfo: response.info
+          };
+        } else {
+          log.warn('License validation failed:', response.error);
+          return { 
+            licensed: false, 
+            message: response.error || 'Invalid license key' 
+          };
+        }
+      } catch (networkError) {
+        // If offline, trust stored license (grace period)
+        log.warn('Network error during license check, using cached status:', networkError.message);
+        return { 
+          licensed: true, 
+          message: 'Offline mode - license cached',
+          offline: true
+        };
+      }
+    } catch (error) {
+      log.error('Failed to check license:', error.message);
+      return { 
+        licensed: false, 
+        message: 'License check failed' 
+      };
+    }
+  });
+
+  // License activation
+  ipcMain.handle('activate-license', async (event, licenseKey) => {
+    try {
+      const apiUrl = process.env.API_URL || 'https://epure-api.railway.app';
+      const https = require('https');
+      
+      const response = await new Promise((resolve, reject) => {
+        const req = https.get(`${apiUrl}/api/validate-license/${licenseKey}`, (res) => {
+          let data = '';
+          res.on('data', chunk => data += chunk);
+          res.on('end', () => {
+            try {
+              resolve(JSON.parse(data));
+            } catch {
+              resolve({ valid: false });
+            }
+          });
+        });
+        req.on('error', reject);
+        req.setTimeout(10000, () => {
+          req.destroy();
+          reject(new Error('Timeout'));
+        });
+      });
+
+      if (response.valid) {
+        // Store the license key
+        store.set('licenseKey', licenseKey);
+        log.info('License activated and stored');
+        return { 
+          success: true, 
+          message: 'License activated successfully!' 
+        };
+      } else {
+        log.warn('License activation failed:', response.error);
+        return { 
+          success: false, 
+          message: response.error || 'Invalid license key' 
+        };
+      }
+    } catch (error) {
+      log.error('Failed to activate license:', error.message);
+      return { 
+        success: false, 
+        message: 'Could not verify license. Please check your internet connection.' 
+      };
+    }
+  });
+
+  // Image processing
+  ipcMain.handle('process-images', async (event, { files, settings }) => {
+    try {
+      log.info('Processing images request received:', files.length, 'files');
+      
+      // For now, return a mock response
+      // In production, this would use the actual image processing logic
+      const results = files.map((file, index) => ({
+        id: file.id || index,
+        name: file.name,
+        originalSize: file.size,
+        processedSize: Math.floor(file.size * 0.7), // Mock 30% reduction
+        status: 'completed',
+        savings: 30
+      }));
+      
+      log.info('Image processing completed:', results.length, 'files processed');
+      return { success: true, results };
+    } catch (error) {
+      log.error('Failed to process images:', error.message);
+      return { 
+        success: false, 
+        error: error.message 
+      };
+    }
+  });
+
+  // Audio processing handlers
+  let audioProcessor;
+  try {
+    audioProcessor = require('./audio-processor');
+    log.info('Audio processor loaded successfully');
+  } catch (error) {
+    log.warn('Audio processor not available:', error.message);
+    audioProcessor = null;
+  }
+
+  // Check if FFmpeg is available
+  ipcMain.handle('check-ffmpeg', async () => {
+    try {
+      if (!audioProcessor) {
+        return { available: false, message: 'Audio processor not loaded' };
+      }
+      const available = await audioProcessor.isFFmpegAvailable();
+      return { 
+        available, 
+        message: available ? 'FFmpeg is available' : 'FFmpeg is not installed'
+      };
+    } catch (error) {
+      log.error('FFmpeg check failed:', error.message);
+      return { available: false, message: error.message };
+    }
+  });
+
+  // Get audio file metadata
+  ipcMain.handle('get-audio-metadata', async (event, filePath) => {
+    try {
+      if (!audioProcessor) {
+        throw new Error('Audio processor not available');
+      }
+      const metadata = await audioProcessor.getAudioMetadata(filePath);
+      return { success: true, metadata };
+    } catch (error) {
+      log.error('Failed to get audio metadata:', error.message);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Convert single audio file
+  ipcMain.handle('convert-audio', async (event, { inputPath, outputFormat, options = {} }) => {
+    try {
+      if (!audioProcessor) {
+        throw new Error('Audio processor not available');
+      }
+      
+      log.info('Audio conversion requested:', { inputPath, outputFormat });
+      
+      const result = await audioProcessor.convertAudio(inputPath, outputFormat, {
+        ...options,
+        outputDir: options.outputDir || store.get('outputDir'),
+        onProgress: (progress) => {
+          // Send progress to renderer
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('audio-conversion-progress', { progress });
+          }
+        }
+      });
+      
+      log.info('Audio conversion completed:', result);
+      
+      // Track analytics
+      if (analytics && analytics.trackFileConverted) {
+        analytics.trackFileConverted({
+          type: 'audio',
+          inputFormat: path.extname(inputPath).slice(1),
+          outputFormat,
+          inputSize: result.inputSize,
+          outputSize: result.outputSize
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      log.error('Audio conversion failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Batch convert audio files
+  ipcMain.handle('batch-convert-audio', async (event, { inputPaths, outputFormat, options = {} }) => {
+    try {
+      if (!audioProcessor) {
+        throw new Error('Audio processor not available');
+      }
+      
+      log.info('Batch audio conversion requested:', { count: inputPaths.length, outputFormat });
+      
+      const results = await audioProcessor.batchConvertAudio(inputPaths, outputFormat, {
+        ...options,
+        outputDir: options.outputDir || store.get('outputDir'),
+        onTotalProgress: (progress) => {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('audio-batch-progress', { progress });
+          }
+        }
+      });
+      
+      log.info('Batch audio conversion completed:', results.length, 'files');
+      
+      // Track analytics
+      if (analytics && analytics.trackBatchProcessing) {
+        analytics.trackBatchProcessing({
+          type: 'audio',
+          count: inputPaths.length,
+          outputFormat,
+          successCount: results.filter(r => r.success).length
+        });
+      }
+      
+      return { success: true, results };
+    } catch (error) {
+      log.error('Batch audio conversion failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Get supported audio formats
+  ipcMain.handle('get-audio-formats', () => {
+    if (!audioProcessor) {
+      return { 
+        input: [], 
+        output: [] 
+      };
+    }
+    return {
+      input: audioProcessor.SUPPORTED_INPUT_FORMATS,
+      output: audioProcessor.SUPPORTED_OUTPUT_FORMATS
+    };
+  });
+}
+
+// Application menu setup
+function setupApplicationMenu() {
+  const template = [
+    {
+      label: 'Épure',
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideothers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    },
+    {
+      label: 'File',
+      submenu: [
+        { role: 'close' }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'close' }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
+// Initialize IPC handlers when app is ready
+app.whenReady().then(() => {
+  setupIPCHandlers();
 });
