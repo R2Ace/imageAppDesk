@@ -22,7 +22,7 @@ const Footer = () => {
               <h3 className="text-3xl font-bold">Épure</h3>
             </div>
             <p className="text-xl text-white/80 max-w-2xl mx-auto">
-              The fastest, most private image converter for professionals who demand quality.
+              The fastest, most private file converter for professionals who demand quality.
             </p>
           </div>
 

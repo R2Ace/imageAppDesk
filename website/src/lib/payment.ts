@@ -10,7 +10,7 @@ export interface PaymentConfig {
 const config: PaymentConfig = {
   stripePublishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
   priceId: import.meta.env.VITE_STRIPE_PRICE_ID || '',
-  productName: 'Épure - Image Converter',
+  productName: 'Épure - File Converter',
   amount: 9.00
 };
 

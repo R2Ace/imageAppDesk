@@ -151,18 +151,28 @@ const WaitlistCTA = () => {
 
                 {!isSubmitted ? (
                   <form 
-                    action="https://app.kit.com/forms/8887361/subscriptions"
-                    method="post"
-                    target="_blank"
+                    action="https://formspree.io/f/xvzponok"
+                    method="POST"
                     className="flex flex-col sm:flex-row gap-3"
-                    onSubmit={(e) => {
-                      console.log('WaitlistCTA form submitted');
-                      setTimeout(() => setIsSubmitted(true), 500);
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      try {
+                        const response = await fetch('https://formspree.io/f/xvzponok', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email, source: 'waitlist-cta' })
+                        });
+                        if (response.ok) {
+                          setIsSubmitted(true);
+                        }
+                      } catch (error) {
+                        console.error('Form submission failed:', error);
+                      }
                     }}
                   >
                     <input
                       type="email"
-                      name="email_address"
+                      name="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"

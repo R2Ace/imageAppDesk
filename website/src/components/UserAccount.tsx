@@ -62,15 +62,16 @@ const UserAccount: React.FC<UserAccountProps> = ({ isOpen, onClose }) => {
   const handleLogin = async () => {
     if (userEmail && userEmail.includes('@')) {
       try {
-        // Send to ConvertKit API
-        const response = await fetch('https://api.kit.com/v3/forms/8887361/subscribe', {
+        // Send to Formspree
+        const response = await fetch('https://formspree.io/f/xvzponok', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             email: userEmail,
-            tags: ['profile-login', 'potential-customer']
+            source: 'profile-login',
+            timestamp: new Date().toISOString()
           })
         });
 
@@ -83,10 +84,13 @@ const UserAccount: React.FC<UserAccountProps> = ({ isOpen, onClose }) => {
               source: 'profile-popup'
             });
           });
+        } else {
+          // Still allow login even if Formspree fails
+          setIsLoggedIn(true);
         }
       } catch (error) {
-        console.error('ConvertKit API failed:', error);
-        // Still allow login even if ConvertKit fails
+        console.error('Form submission failed:', error);
+        // Still allow login even if submission fails
         setIsLoggedIn(true);
       }
     } else {

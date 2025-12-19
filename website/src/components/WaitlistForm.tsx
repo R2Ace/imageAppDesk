@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Check, Loader2 } from 'lucide-react';
 
@@ -7,28 +7,12 @@ interface WaitlistFormProps {
   className?: string;
 }
 
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xvzponok';
+
 const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', className = '' }) => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
-
-  useEffect(() => {
-    // Load ConvertKit script
-    const script = document.createElement('script');
-    script.src = 'https://f.convertkit.com/ckjs/ck.5.js';
-    script.async = true;
-    
-    const existingScript = document.querySelector('script[src="https://f.convertkit.com/ckjs/ck.5.js"]');
-    if (!existingScript) {
-      document.head.appendChild(script);
-    }
-    
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,25 +34,28 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
       });
     }
     
-    // Submit to ConvertKit via form action
     try {
-      const formData = new FormData();
-      formData.append('email_address', email);
-      
-      const response = await fetch('https://app.kit.com/forms/8887361/subscriptions', {
+      const response = await fetch(FORMSPREE_ENDPOINT, {
         method: 'POST',
-        body: formData,
-        mode: 'no-cors' // ConvertKit doesn't support CORS for form submissions
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email, 
+          source: `waitlist-form-${variant}`,
+          timestamp: new Date().toISOString()
+        })
       });
       
-      // Since no-cors mode doesn't give us response details, assume success
-      setStatus('success');
-      
-      if (typeof window !== 'undefined' && (window as any).mixpanel) {
-        (window as any).mixpanel.track('Waitlist Signup Success', {
-          email: email,
-          source: variant
-        });
+      if (response.ok) {
+        setStatus('success');
+        
+        if (typeof window !== 'undefined' && (window as any).mixpanel) {
+          (window as any).mixpanel.track('Waitlist Signup Success', {
+            email: email,
+            source: variant
+          });
+        }
+      } else {
+        throw new Error('Form submission failed');
       }
     } catch (error) {
       console.error('Waitlist signup failed:', error);
@@ -82,14 +69,14 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={`flex items-center justify-center gap-3 p-4 rounded-xl bg-success/10 border border-success/20 ${className}`}
+        className={`flex items-center justify-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200 ${className}`}
       >
-        <div className="w-10 h-10 rounded-full bg-success flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center">
           <Check className="w-5 h-5 text-white" />
         </div>
         <div className="text-left">
-          <p className="font-semibold text-success">You're on the list!</p>
-          <p className="text-sm text-muted-foreground">Check your email for confirmation.</p>
+          <p className="font-semibold text-emerald-700">You're on the list!</p>
+          <p className="text-sm text-muted-foreground">We'll notify you when we launch.</p>
         </div>
       </motion.div>
     );
@@ -112,7 +99,7 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="px-4 py-2 rounded-lg bg-accent text-white font-medium text-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
+          className="px-4 py-2 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
           {status === 'loading' ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -135,7 +122,7 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
             setStatus('idle');
           }}
           placeholder="Enter your email address"
-          className="waitlist-input"
+          className="w-full px-4 py-3 rounded-xl border-2 border-border bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           disabled={status === 'loading'}
         />
         {status === 'error' && (
@@ -144,7 +131,7 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="waitlist-button w-full flex items-center justify-center gap-2"
+          className="w-full px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {status === 'loading' ? (
             <>
@@ -177,13 +164,13 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
             setStatus('idle');
           }}
           placeholder="Enter your email address"
-          className="flex-1 px-5 py-4 rounded-xl border-2 border-border bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all"
+          className="flex-1 px-5 py-4 rounded-xl border-2 border-border bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
           disabled={status === 'loading'}
         />
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="px-8 py-4 rounded-xl font-semibold text-white bg-gradient-accent shadow-accent-glow hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
+          className="px-8 py-4 rounded-xl font-semibold text-white bg-primary shadow-lg hover:bg-primary/90 hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
         >
           {status === 'loading' ? (
             <>
@@ -209,4 +196,3 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
 };
 
 export default WaitlistForm;
-

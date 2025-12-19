@@ -217,10 +217,10 @@ const Minimal3StepConverter = () => {
           </motion.div>
           
           <h2 className="text-4xl lg:text-6xl font-bold text-foreground mb-4">
-            Convert Images in <span className="text-gradient">3 Simple Steps</span>
+            Convert Files in <span className="text-gradient">3 Simple Steps</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Experience the power of instant, private image conversion right in your browser
+            Experience the power of instant, private file conversion right in your browser
           </p>
         </motion.div>
 
@@ -238,7 +238,7 @@ const Minimal3StepConverter = () => {
             <div className="text-center mb-4">
               <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full font-semibold">
                 <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
-                Upload Image
+                Upload File
               </div>
             </div>
             
@@ -258,15 +258,10 @@ const Minimal3StepConverter = () => {
               >
                 {!selectedFile ? (
                   <>
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      <Upload 
-                        size={64} 
-                        className="text-muted-foreground mb-6 group-hover:text-primary transition-colors duration-300" 
-                      />
-                    </motion.div>
+                    <Upload 
+                      size={64} 
+                      className="text-muted-foreground mb-6 group-hover:text-primary transition-colors duration-300" 
+                    />
                     <p className="text-foreground font-semibold text-center mb-2">
                       Drag 'n' drop files here
                     </p>
@@ -423,14 +418,9 @@ const Minimal3StepConverter = () => {
             
             <Card className="w-80 h-80 p-0 overflow-hidden">
               <div className="h-full border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center">
-                {!isConverted ? (
-                  <>
-                    <motion.div
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    >
+                  {!isConverted ? (
+                    <>
                       <Download size={64} className="text-muted-foreground mb-6" />
-                    </motion.div>
                     
                     <p className="text-muted-foreground text-center mb-4">
                       Your converted file will appear here
@@ -508,7 +498,7 @@ const Minimal3StepConverter = () => {
             animate="animate"
           >
             <p className="text-muted-foreground mb-4 text-lg">
-              Want to convert another image?
+              Want to convert another file?
             </p>
             <Button
               onClick={resetConverter}
@@ -516,7 +506,7 @@ const Minimal3StepConverter = () => {
               size="lg"
             >
               <RefreshCw size={18} className="mr-2" />
-              Convert Another Image
+              Convert Another File
             </Button>
           </motion.div>
         )}

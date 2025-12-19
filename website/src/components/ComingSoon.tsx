@@ -5,7 +5,7 @@ import WaitlistForm from './WaitlistForm';
 
 const ComingSoon = () => {
   const currentFeatures = [
-    "Batch processing - convert 1000s of images",
+    "Batch processing - convert 1000s of files",
     "HEIC to JPG/PNG (Apple's format)",
     "WebP, AVIF, TIFF support",
     "Smart compression with quality control",

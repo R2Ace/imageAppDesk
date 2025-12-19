@@ -54,7 +54,7 @@ const Pricing = () => {
   }
 
   const features = [
-    "Unlimited image processing",
+    "Unlimited file processing",
     "All formats (HEIC, WebP, TIFF, etc.)",
     "Advanced batch processing",
     "Smart compression algorithms",

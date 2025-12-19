@@ -7,7 +7,7 @@ const Features = () => {
     {
       icon: Zap,
       title: "Lightning Fast",
-      description: "Native desktop performance means instant processing. Convert hundreds of images in seconds, not minutes.",
+      description: "Native desktop performance means instant processing. Convert hundreds of files in seconds, not minutes.",
       stat: "3x faster",
       gradient: "from-amber-400 to-orange-500"
     },
@@ -108,7 +108,7 @@ const Features = () => {
               variants={itemVariants}
               className="group"
             >
-              <Card className="h-full bg-white border border-border/50 shadow-sm hover:shadow-strong transition-all duration-300 hover:-translate-y-1">
+              <Card className="h-full bg-white border border-border/50 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <CardHeader className="pb-4">
                   <motion.div
                     className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.gradient} p-3.5 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}

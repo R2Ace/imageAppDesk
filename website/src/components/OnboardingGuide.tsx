@@ -15,7 +15,7 @@ const onboardingSteps: OnboardingStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to Épure! ✨',
-    description: 'Let us show you how to get the most out of our image processing app.',
+    description: 'Let us show you how to get the most out of our file conversion app.',
     targetSelector: 'body',
     position: 'top'
   },
@@ -29,14 +29,14 @@ const onboardingSteps: OnboardingStep[] = [
   {
     id: 'demo',
     title: 'Try Before You Buy',
-    description: 'Test our image compression right in your browser with this interactive demo.',
+    description: 'Test our file conversion right in your browser with this interactive demo.',
     targetSelector: '[data-tour="interactive-demo"]',
     position: 'top'
   },
   {
     id: 'features',
     title: 'Key Features',
-    description: 'Épure offers lightning-fast processing, complete privacy, and supports all major image formats.',
+    description: 'Épure offers lightning-fast processing, complete privacy, and supports images, audio, and documents.',
     targetSelector: '[data-tour="features"]',
     position: 'top'
   },

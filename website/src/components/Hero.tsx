@@ -71,7 +71,7 @@ const Hero = () => {
               className="text-5xl lg:text-7xl font-bold leading-tight mb-6"
               variants={fadeInUp}
             >
-              <span className="text-gradient">Process Images</span>
+              <span className="text-gradient">Process Files</span>
               <br />
               <span className="text-foreground">Like a Pro</span>
             </motion.h1>
@@ -80,8 +80,8 @@ const Hero = () => {
               className="text-xl lg:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-2xl"
               variants={fadeInUp}
             >
-              The fastest, most private image converter for Mac and Windows. Convert, resize, and optimize 
-              thousands of images with just a few clicks.
+              The fastest, most private file converter for Mac and Windows. Convert images, audio, and documents 
+              with just a few clicks.
             </motion.p>
             
             {/* CTA Buttons */}
@@ -141,7 +141,7 @@ const Hero = () => {
                     >
                       <Download className="w-12 h-12 text-primary mx-auto mb-3" />
                     </motion.div>
-                    <p className="text-primary font-semibold">Drag & drop images here</p>
+                    <p className="text-primary font-semibold">Drag & drop files here</p>
                     <p className="text-muted-foreground text-sm mt-1">Or click to browse</p>
                   </div>
                   

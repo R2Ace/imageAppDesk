@@ -1,38 +1,69 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xvzponok';
 
 const EmailSignup: React.FC = () => {
-  useEffect(() => {
-    // Load ConvertKit core script for the form functionality
-    const script = document.createElement('script');
-    script.src = 'https://f.convertkit.com/ckjs/ck.5.js';
-    script.async = true;
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Check if script is already loaded
-    const existingScript = document.querySelector('script[src="https://f.convertkit.com/ckjs/ck.5.js"]');
-    if (!existingScript) {
-      document.head.appendChild(script);
-    }
+    if (!email || !email.includes('@')) return;
     
-    return () => {
-      // Cleanup if needed
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
+    setStatus('loading');
+    
+    try {
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email, 
+          source: 'newsletter-signup',
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      if (response.ok) {
+        setStatus('success');
+        setEmail('');
+      } else {
+        setStatus('error');
       }
-    };
-  }, []);
+    } catch (error) {
+      console.error('Newsletter signup failed:', error);
+      setStatus('error');
+    }
+  };
+
+  if (status === 'success') {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div 
+          style={{
+            backgroundColor: 'rgb(240, 253, 244)',
+            borderRadius: '8px',
+            border: '1px solid #86efac',
+            padding: '32px',
+            textAlign: 'center'
+          }}
+        >
+          <h2 style={{ color: '#166534', fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>
+            You're subscribed! 🎉
+          </h2>
+          <p style={{ color: '#15803d', fontSize: '16px' }}>
+            We'll keep you updated on our launch.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Kit.com Newsletter Form */}
       <form 
-        action="https://app.kit.com/forms/8887361/subscriptions" 
-        className="seva-form formkit-form" 
-        method="post" 
-        data-sv-form="8475501" 
-        data-uid="6b04348fc3" 
-        data-format="inline" 
-        data-version="5" 
-        data-options='{"settings":{"after_subscribe":{"action":"message","success_message":"Success! Now check your email to confirm your subscription.","redirect_url":""},"analytics":{"google":null,"fathom":null,"facebook":null,"segment":null,"pinterest":null,"sparkloop":null,"googletagmanager":null},"modal":{"trigger":"timer","scroll_percentage":null,"timer":5,"devices":"all","show_once_every":15},"powered_by":{"show":true,"url":"https://kit.com/features/forms?utm_campaign=poweredby&utm_content=form&utm_medium=referral&utm_source=dynamic"},"recaptcha":{"enabled":false},"return_visitor":{"action":"show","custom_content":""},"slide_in":{"display_in":"bottom_right","trigger":"timer","scroll_percentage":null,"timer":5,"devices":"all","show_once_every":15},"sticky_bar":{"display_in":"top","trigger":"timer","scroll_percentage":null,"timer":5,"devices":"all","show_once_every":15}},"version":"5"}' 
+        onSubmit={handleSubmit}
         style={{
           backgroundColor: 'rgb(249, 250, 251)',
           borderRadius: '8px',
@@ -42,49 +73,52 @@ const EmailSignup: React.FC = () => {
           overflow: 'hidden'
         }}
       >
-        <div className="formkit-background" style={{ opacity: 0.2 }}></div>
-        <div data-style="minimal" style={{ padding: '32px', width: '100%', position: 'relative' }}>
+        <div style={{ padding: '32px', width: '100%', position: 'relative' }}>
           <div 
-            className="formkit-header" 
-            data-element="header" 
             style={{ 
               color: 'rgb(77, 77, 77)', 
               fontSize: '24px', 
               fontWeight: '700',
               margin: '0 0 16px 0',
-              textAlign: 'center' as const
+              textAlign: 'center'
             }}
           >
             <h2>Join the Newsletter</h2>
           </div>
           <div 
-            className="formkit-subheader" 
-            data-element="subheader" 
             style={{ 
               color: 'rgb(104, 104, 104)', 
               fontSize: '16px',
               margin: '0 0 24px 0',
-              textAlign: 'center' as const
+              textAlign: 'center'
             }}
           >
             Subscribe to get our latest content by email.
           </div>
-          <ul className="formkit-alert formkit-alert-error" data-element="errors" data-group="alert"></ul>
-          <div data-element="fields" data-stacked="false" className="seva-fields formkit-fields" style={{
+          
+          {status === 'error' && (
+            <p style={{ color: '#dc2626', textAlign: 'center', marginBottom: '16px' }}>
+              Something went wrong. Please try again.
+            </p>
+          )}
+          
+          <div style={{
             display: 'flex',
-            flexWrap: 'wrap' as const,
+            flexWrap: 'wrap',
             gap: '12px',
             margin: '0 auto',
             alignItems: 'flex-end'
           }}>
-            <div className="formkit-field" style={{ flex: '1 0 220px', margin: '0' }}>
+            <div style={{ flex: '1 0 220px', margin: '0' }}>
               <input 
-                className="formkit-input" 
-                name="email_address" 
+                name="email" 
                 aria-label="Email Address" 
                 placeholder="Email Address" 
                 required 
-                type="email" 
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={status === 'loading'}
                 style={{ 
                   color: 'rgb(0, 0, 0)', 
                   borderColor: 'rgb(227, 227, 227)', 
@@ -101,39 +135,44 @@ const EmailSignup: React.FC = () => {
               />
             </div>
             <button 
-              data-element="submit" 
-              className="formkit-submit" 
               type="submit"
+              disabled={status === 'loading' || !email}
               style={{ 
                 color: 'rgb(255, 255, 255)', 
                 backgroundColor: '#3b82f6', 
                 borderRadius: '6px', 
                 fontWeight: '500',
                 border: '0',
-                cursor: 'pointer',
-                display: 'inline-block',
-                textAlign: 'center' as const,
+                cursor: status === 'loading' ? 'wait' : 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                textAlign: 'center',
                 fontSize: '15px',
                 padding: '12px 24px',
                 margin: '0',
-                transition: 'all 300ms ease-in-out'
+                transition: 'all 300ms ease-in-out',
+                opacity: status === 'loading' ? 0.7 : 1
               }}
             >
-              <div className="formkit-spinner" style={{ display: 'none' }}>
-                <div></div><div></div><div></div>
-              </div>
-              <span>Subscribe</span>
+              {status === 'loading' ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Subscribing...</span>
+                </>
+              ) : (
+                <span>Subscribe</span>
+              )}
             </button>
           </div>
           <div 
-            className="formkit-guarantee" 
-            data-element="guarantee" 
             style={{ 
               color: 'rgb(104, 104, 104)', 
               fontSize: '13px', 
               fontWeight: '400',
               margin: '16px 0 0 0',
-              textAlign: 'center' as const
+              textAlign: 'center'
             }}
           >
             We won't send you spam. Unsubscribe at any time.

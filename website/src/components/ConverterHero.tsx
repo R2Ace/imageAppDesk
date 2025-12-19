@@ -183,7 +183,7 @@ const ConverterHero = () => {
       });
     }
 
-    // Submit to ConvertKit (or just simulate for now)
+    // Form submission handled via onSubmit
     try {
       // The form action will handle the actual submission
       setIsSubmitted(true);
@@ -218,13 +218,13 @@ const ConverterHero = () => {
             </div>
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6">
-              Convert images in
+              Convert files in
               <br />
               <span className="text-gradient">3 simple steps</span>
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              The fastest, most private image converter. Works right in your browser — 
+              The fastest, most private file converter. Works right in your browser — 
               your files never leave your device.
             </p>
           </motion.div>
@@ -265,7 +265,7 @@ const ConverterHero = () => {
                     <>
                       <Upload size={48} className="text-muted-foreground mb-4" />
                       <p className="text-foreground font-medium text-center mb-1">
-                        Drop image here
+                        Drop file here
                       </p>
                       <p className="text-muted-foreground text-sm text-center mb-3">
                         or click to browse
@@ -436,7 +436,7 @@ const ConverterHero = () => {
                 <div className="h-full border-2 border-dashed border-border rounded-2xl p-6 flex flex-col items-center justify-center">
                   {!isConverted ? (
                     <>
-                      <Download size={48} className="text-muted-foreground mb-4" />
+                      <Download size={48} className="text-muted-foreground mb-4 transition-transform duration-300" />
                       <p className="text-muted-foreground text-center text-sm mb-3">
                         Your converted file will appear here
                       </p>
@@ -510,7 +510,7 @@ const ConverterHero = () => {
                   className="group"
                 >
                   <RefreshCw size={16} className="mr-2 group-hover:rotate-180 transition-transform duration-500" />
-                  Convert Another Image
+                  Convert Another File
                 </Button>
               </motion.div>
             )}
@@ -537,36 +537,47 @@ const ConverterHero = () => {
 
                 {!isSubmitted ? (
                   <form 
-                    action="https://app.kit.com/forms/8887361/subscriptions"
-                    method="post"
-                    target="_blank"
-                    onSubmit={(e) => {
-                      console.log('Form submitted with email:', email);
-                      // Let the form submit naturally to Kit
-                      setTimeout(() => {
-                        setIsSubmitted(true);
-                      }, 500);
+                    action="https://formspree.io/f/xvzponok"
+                    method="POST"
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      setIsSubmitting(true);
+                      try {
+                        const response = await fetch('https://formspree.io/f/xvzponok', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email, source: 'hero-waitlist' })
+                        });
+                        if (response.ok) {
+                          setIsSubmitted(true);
+                        }
+                      } catch (error) {
+                        console.error('Form submission failed:', error);
+                      } finally {
+                        setIsSubmitting(false);
+                      }
                     }}
                     className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
                   >
                     <input
                       type="email"
-                      name="email_address"
+                      name="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       required
                       className="flex-1 px-4 py-3 border-2 border-input rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 bg-background text-foreground"
                     />
-                    <button
+                    <Button
                       type="submit"
                       disabled={isSubmitting || !email}
-                      className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-accent-warm to-amber text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group whitespace-nowrap"
+                      variant="premium"
+                      className="group whitespace-nowrap"
                     >
                       <Mail className="mr-2 h-4 w-4" />
-                      Join Waitlist
+                      {isSubmitting ? 'Joining...' : 'Join Waitlist'}
                       <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    </Button>
                   </form>
                 ) : (
                   <motion.div
