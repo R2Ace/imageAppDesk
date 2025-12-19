@@ -2,7 +2,7 @@
   "name": "epure",
   "productName": "Épure",
   "version": "1.0.0",
-  "description": "A minimalist image and audio processing app for macOS and Windows",
+  "description": "A minimalist image, audio, and document processing app for macOS and Windows",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -25,9 +25,12 @@
     "electron",
     "image",
     "audio",
+    "document",
     "processing",
     "sharp",
     "ffmpeg",
+    "pdf",
+    "docx",
     "resize",
     "converter",
     "macos",
@@ -47,7 +50,9 @@
     "electron-updater": "^6.1.4",
     "mixpanel": "^0.18.0",
     "stripe": "^14.13.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "pdf-lib": "^1.17.1",
+    "mammoth": "^1.6.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

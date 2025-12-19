@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <title>Épure</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.mixpanel.com https://api.stripe.com; img-src 'self' data: blob:; media-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.mixpanel.com https://api.stripe.com https://epure-webhook-production.up.railway.app; img-src 'self' data: blob:; media-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self';">
 </head>
 <body>
     <!-- Custom Title Bar -->
@@ -43,10 +43,11 @@
                         <span>PNG</span>
                         <span>WebP</span>
                         <span>HEIC</span>
-                        <span>TIFF</span>
+                        <span>PDF</span>
+                        <span>DOCX</span>
                     </div>
                 </div>
-                <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                <input type="file" id="fileInput" multiple accept="image/*,.pdf,.docx,.doc,.txt" hidden>
             </div>
             
             <!-- Feedback Section - Outside drop zone for better UX -->

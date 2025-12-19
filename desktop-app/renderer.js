@@ -389,21 +389,39 @@ function handleDrop(e) {
     const invalidFiles = [];
     
     // Supported image MIME types
-    const supportedTypes = [
+    const supportedImageTypes = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 
         'image/heic', 'image/heif', 'image/tiff', 'image/tif'
     ];
     
+    // Supported document MIME types
+    const supportedDocTypes = [
+        'application/pdf', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword',
+        'text/plain'
+    ];
+    
+    const supportedImageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'tiff', 'tif'];
+    const supportedDocExtensions = ['pdf', 'docx', 'doc', 'txt'];
+    
     allFiles.forEach(file => {
-        // Check by MIME type and extension
-        const isValidMime = file.type && supportedTypes.includes(file.type.toLowerCase());
         const extension = file.name.split('.').pop()?.toLowerCase();
-        const isValidExtension = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'tiff', 'tif'].includes(extension);
+        
+        // Check images
+        const isValidImageMime = file.type && supportedImageTypes.includes(file.type.toLowerCase());
+        const isValidImageExt = supportedImageExtensions.includes(extension);
+        
+        // Check documents
+        const isValidDocMime = file.type && supportedDocTypes.includes(file.type.toLowerCase());
+        const isValidDocExt = supportedDocExtensions.includes(extension);
         
         // File size check (max 200MB)
         const isValidSize = file.size <= 200 * 1024 * 1024;
         
-        if ((isValidMime || isValidExtension) && isValidSize) {
+        if ((isValidImageMime || isValidImageExt || isValidDocMime || isValidDocExt) && isValidSize) {
+            // Tag file with type for later processing
+            file.fileCategory = (isValidImageMime || isValidImageExt) ? 'image' : 'document';
             validFiles.push(file);
         } else {
             invalidFiles.push({file, reason: !isValidSize ? 'too large' : 'unsupported format'});
@@ -419,7 +437,7 @@ function handleDrop(e) {
     if (validFiles.length > 0) {
         showPreviewStage(validFiles);
     } else if (allFiles.length > 0) {
-        showNotification('No valid image files found. Please use JPG, PNG, WebP, HEIC, or TIFF files under 200MB.', 'error');
+        showNotification('No valid files found. Supported: JPG, PNG, WebP, HEIC, TIFF, PDF, DOCX, TXT', 'error');
     }
 }
 
@@ -430,21 +448,39 @@ function handleFileSelect(e) {
     const invalidFiles = [];
     
     // Supported image MIME types
-    const supportedTypes = [
+    const supportedImageTypes = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 
         'image/heic', 'image/heif', 'image/tiff', 'image/tif'
     ];
     
+    // Supported document MIME types
+    const supportedDocTypes = [
+        'application/pdf', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword',
+        'text/plain'
+    ];
+    
+    const supportedImageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'tiff', 'tif'];
+    const supportedDocExtensions = ['pdf', 'docx', 'doc', 'txt'];
+    
     allFiles.forEach(file => {
-        // Check by MIME type and extension
-        const isValidMime = file.type && supportedTypes.includes(file.type.toLowerCase());
         const extension = file.name.split('.').pop()?.toLowerCase();
-        const isValidExtension = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'tiff', 'tif'].includes(extension);
+        
+        // Check images
+        const isValidImageMime = file.type && supportedImageTypes.includes(file.type.toLowerCase());
+        const isValidImageExt = supportedImageExtensions.includes(extension);
+        
+        // Check documents
+        const isValidDocMime = file.type && supportedDocTypes.includes(file.type.toLowerCase());
+        const isValidDocExt = supportedDocExtensions.includes(extension);
         
         // File size check (max 200MB)
         const isValidSize = file.size <= 200 * 1024 * 1024;
         
-        if ((isValidMime || isValidExtension) && isValidSize) {
+        if ((isValidImageMime || isValidImageExt || isValidDocMime || isValidDocExt) && isValidSize) {
+            // Tag file with type for later processing
+            file.fileCategory = (isValidImageMime || isValidImageExt) ? 'image' : 'document';
             validFiles.push(file);
         } else {
             invalidFiles.push({file, reason: !isValidSize ? 'too large' : 'unsupported format'});
@@ -460,7 +496,7 @@ function handleFileSelect(e) {
     if (validFiles.length > 0) {
         showPreviewStage(validFiles);
     } else if (allFiles.length > 0) {
-        showNotification('No valid image files found. Please use JPG, PNG, WebP, HEIC, or TIFF files under 200MB.', 'error');
+        showNotification('No valid files found. Supported: JPG, PNG, WebP, HEIC, TIFF, PDF, DOCX, TXT', 'error');
     }
 }
 
@@ -483,17 +519,77 @@ function showPreviewStage(files) {
     // Create conversion items for each file
     files.forEach((file, index) => {
         const fileExt = file.name.split('.').pop().toUpperCase();
-        const imageUrl = URL.createObjectURL(file);
+        const isDocument = file.fileCategory === 'document';
         
         const conversionItem = document.createElement('div');
         conversionItem.className = 'conversion-item';
         conversionItem.dataset.fileIndex = index;
+        conversionItem.dataset.fileCategory = file.fileCategory || 'image';
         
-        conversionItem.innerHTML = `
-            <div class="conversion-preview">
+        // Create preview content based on file type
+        let previewContent;
+        let formatOptions;
+        
+        if (isDocument) {
+            // Document preview - show icon based on type
+            const docIcons = {
+                'PDF': '📄',
+                'DOCX': '📝',
+                'DOC': '📝',
+                'TXT': '📃'
+            };
+            const icon = docIcons[fileExt] || '📄';
+            previewContent = `<div class="image-preview" style="font-size: 32px; background: var(--primary-light);">${icon}</div>`;
+            
+            // Document format options based on input type
+            if (fileExt === 'PDF') {
+                formatOptions = `
+                    <option value="">Choose format...</option>
+                    <option value="txt">Text (.txt)</option>
+                `;
+            } else if (fileExt === 'DOCX' || fileExt === 'DOC') {
+                formatOptions = `
+                    <option value="">Choose format...</option>
+                    <option value="pdf">PDF</option>
+                    <option value="html">HTML</option>
+                    <option value="txt">Text (.txt)</option>
+                `;
+            } else if (fileExt === 'TXT') {
+                formatOptions = `
+                    <option value="">Choose format...</option>
+                    <option value="pdf">PDF</option>
+                `;
+            } else {
+                formatOptions = `<option value="">No conversions available</option>`;
+            }
+        } else {
+            // Image preview
+            const imageUrl = URL.createObjectURL(file);
+            previewContent = `
                 <div class="image-preview">
                     <img src="${imageUrl}" alt="${file.name}" onerror="this.style.display='none'; this.parentNode.innerHTML='📷';">
                 </div>
+            `;
+            formatOptions = `
+                <option value="">Choose format...</option>
+                <option value="jpeg">JPEG</option>
+                <option value="png">PNG</option>
+                <option value="webp">WebP</option>
+                <option value="avif">AVIF</option>
+            `;
+        }
+        
+        // Quality control only for images
+        const qualityControl = isDocument ? '' : `
+            <div class="quality-control-mini">
+                <input type="range" min="1" max="100" value="80" class="quality-slider" data-file-index="${index}">
+                <span class="quality-value-mini">80%</span>
+            </div>
+        `;
+        
+        conversionItem.innerHTML = `
+            <div class="conversion-preview">
+                ${previewContent}
                 <div class="image-info">
                     <div class="image-details">${formatFileSize(file.size)} • ${fileExt}</div>
                 </div>
@@ -505,17 +601,10 @@ function showPreviewStage(files) {
                 </div>
             </div>
             <div class="format-controls">
-                <select class="format-select" data-file-index="${index}">
-                    <option value="">Choose format...</option>
-                    <option value="jpeg">JPEG</option>
-                    <option value="png">PNG</option>
-                    <option value="webp">WebP</option>
-                    <option value="avif">AVIF</option>
+                <select class="format-select" data-file-index="${index}" data-file-category="${file.fileCategory || 'image'}">
+                    ${formatOptions}
                 </select>
-                <div class="quality-control-mini">
-                    <input type="range" min="1" max="100" value="80" class="quality-slider" data-file-index="${index}">
-                    <span class="quality-value-mini">80%</span>
-                </div>
+                ${qualityControl}
             </div>
         `;
         

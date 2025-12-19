@@ -671,6 +671,130 @@ function setupIPCHandlers() {
       output: audioProcessor.SUPPORTED_OUTPUT_FORMATS
     };
   });
+
+  // Document processing handlers
+  let documentProcessor;
+  try {
+    documentProcessor = require('./document-processor');
+    log.info('Document processor loaded successfully');
+  } catch (error) {
+    log.warn('Document processor not available:', error.message);
+    documentProcessor = null;
+  }
+
+  // Check document dependencies
+  ipcMain.handle('check-document-deps', async () => {
+    try {
+      if (!documentProcessor) {
+        return { available: false, message: 'Document processor not loaded' };
+      }
+      const status = await documentProcessor.checkDependencies();
+      return { available: true, status };
+    } catch (error) {
+      log.error('Document dependency check failed:', error.message);
+      return { available: false, message: error.message };
+    }
+  });
+
+  // Get document metadata
+  ipcMain.handle('get-document-metadata', async (event, filePath) => {
+    try {
+      if (!documentProcessor) {
+        throw new Error('Document processor not available');
+      }
+      const metadata = await documentProcessor.getDocumentMetadata(filePath);
+      return { success: true, metadata };
+    } catch (error) {
+      log.error('Failed to get document metadata:', error.message);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Convert single document
+  ipcMain.handle('convert-document', async (event, { inputPath, outputFormat, options = {} }) => {
+    try {
+      if (!documentProcessor) {
+        throw new Error('Document processor not available');
+      }
+      
+      log.info('Document conversion requested:', { inputPath, outputFormat });
+      
+      const outputDir = options.outputDir || store.get('outputDir');
+      const result = await documentProcessor.convertDocument(inputPath, outputFormat, outputDir, options);
+      
+      log.info('Document conversion completed:', result);
+      
+      // Track analytics
+      if (analytics && analytics.trackFileConverted) {
+        analytics.trackFileConverted({
+          type: 'document',
+          inputFormat: path.extname(inputPath).slice(1),
+          outputFormat
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      log.error('Document conversion failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Batch convert documents
+  ipcMain.handle('batch-convert-documents', async (event, { inputPaths, outputFormat, options = {} }) => {
+    try {
+      if (!documentProcessor) {
+        throw new Error('Document processor not available');
+      }
+      
+      log.info('Batch document conversion requested:', { count: inputPaths.length, outputFormat });
+      
+      const outputDir = options.outputDir || store.get('outputDir');
+      const results = await documentProcessor.batchConvertDocuments(
+        inputPaths, 
+        outputFormat, 
+        outputDir,
+        (progress) => {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('document-conversion-progress', progress);
+          }
+        }
+      );
+      
+      log.info('Batch document conversion completed:', results.length, 'files');
+      
+      // Track analytics
+      if (analytics && analytics.trackBatchProcessing) {
+        analytics.trackBatchProcessing({
+          type: 'document',
+          count: inputPaths.length,
+          outputFormat,
+          successCount: results.filter(r => r.success).length
+        });
+      }
+      
+      return { success: true, results };
+    } catch (error) {
+      log.error('Batch document conversion failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Get supported document formats
+  ipcMain.handle('get-document-formats', () => {
+    if (!documentProcessor) {
+      return { input: [], output: {} };
+    }
+    return documentProcessor.getSupportedFormats();
+  });
+
+  // Check if file is a document
+  ipcMain.handle('is-document-file', (event, filePath) => {
+    if (!documentProcessor) {
+      return false;
+    }
+    return documentProcessor.isDocumentFile(filePath);
+  });
 }
 
 // Application menu setup

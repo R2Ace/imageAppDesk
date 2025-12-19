@@ -83,5 +83,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeAudioProgressListeners: () => {
     ipcRenderer.removeAllListeners('audio-conversion-progress');
     ipcRenderer.removeAllListeners('audio-batch-progress');
+  },
+
+  // Document processing
+  checkDocumentDeps: () => ipcRenderer.invoke('check-document-deps'),
+  getDocumentMetadata: (filePath) => ipcRenderer.invoke('get-document-metadata', filePath),
+  convertDocument: (inputPath, outputFormat, options) => 
+    ipcRenderer.invoke('convert-document', { inputPath, outputFormat, options }),
+  batchConvertDocuments: (inputPaths, outputFormat, options) => 
+    ipcRenderer.invoke('batch-convert-documents', { inputPaths, outputFormat, options }),
+  getDocumentFormats: () => ipcRenderer.invoke('get-document-formats'),
+  isDocumentFile: (filePath) => ipcRenderer.invoke('is-document-file', filePath),
+  
+  // Document conversion progress listeners
+  onDocumentProgress: (callback) => {
+    ipcRenderer.on('document-conversion-progress', (event, data) => callback(data));
+  },
+  removeDocumentProgressListeners: () => {
+    ipcRenderer.removeAllListeners('document-conversion-progress');
   }
 }); 
