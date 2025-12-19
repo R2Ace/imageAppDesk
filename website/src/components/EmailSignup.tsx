@@ -7,30 +7,18 @@ const EmailSignup: React.FC = () => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !email.includes('@')) return;
+  const handleSubmit = () => {
+    if (!email || !email.includes('@')) return false;
     
     setStatus('loading');
     
-    try {
-      const response = await fetch(LOOPS_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      
-      if (response.ok) {
-        setStatus('success');
-        setEmail('');
-      } else {
-        setStatus('error');
-      }
-    } catch (error) {
-      console.error('Newsletter signup failed:', error);
-      setStatus('error');
-    }
+    // Show success after form submits to hidden iframe
+    setTimeout(() => {
+      setStatus('success');
+      setEmail('');
+    }, 1000);
+    
+    return true;
   };
 
   if (status === 'success') {
@@ -58,7 +46,11 @@ const EmailSignup: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <iframe name="loops-newsletter" style={{ display: 'none' }} />
       <form 
+        action={LOOPS_ENDPOINT}
+        method="POST"
+        target="loops-newsletter"
         onSubmit={handleSubmit}
         style={{
           backgroundColor: 'rgb(249, 250, 251)',

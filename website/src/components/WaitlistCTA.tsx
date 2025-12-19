@@ -150,22 +150,15 @@ const WaitlistCTA = () => {
                 </p>
 
                 {!isSubmitted ? (
+                  <>
+                  <iframe name="loops-frame-cta" style={{ display: 'none' }} />
                   <form 
+                    action="https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol"
+                    method="POST"
+                    target="loops-frame-cta"
                     className="flex flex-col sm:flex-row gap-3"
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      try {
-                        const response = await fetch('https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email })
-                        });
-                        if (response.ok) {
-                          setIsSubmitted(true);
-                        }
-                      } catch (error) {
-                        console.error('Form submission failed:', error);
-                      }
+                    onSubmit={() => {
+                      setTimeout(() => setIsSubmitted(true), 1000);
                     }}
                   >
                     <input
@@ -187,6 +180,7 @@ const WaitlistCTA = () => {
                       <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </form>
+                  </>
                 ) : (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}

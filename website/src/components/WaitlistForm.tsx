@@ -14,13 +14,11 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = () => {
     if (!email || !email.includes('@')) {
       setErrorMessage('Please enter a valid email');
       setStatus('error');
-      return;
+      return false;
     }
     
     setStatus('loading');
@@ -34,30 +32,18 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
       });
     }
     
-    try {
-      const response = await fetch(LOOPS_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      
-      if (response.ok) {
-        setStatus('success');
-        
-        if (typeof window !== 'undefined' && (window as any).mixpanel) {
-          (window as any).mixpanel.track('Waitlist Signup Success', {
-            email: email,
-            source: variant
-          });
-        }
-      } else {
-        throw new Error('Form submission failed');
+    // Show success after form submits to hidden iframe
+    setTimeout(() => {
+      setStatus('success');
+      if (typeof window !== 'undefined' && (window as any).mixpanel) {
+        (window as any).mixpanel.track('Waitlist Signup Success', {
+          email: email,
+          source: variant
+        });
       }
-    } catch (error) {
-      console.error('Waitlist signup failed:', error);
-      setStatus('error');
-      setErrorMessage('Something went wrong. Please try again.');
-    }
+    }, 1000);
+    
+    return true;
   };
 
   if (status === 'success') {
@@ -80,114 +66,144 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
 
   if (variant === 'compact') {
     return (
-      <form onSubmit={handleSubmit} className={`flex gap-2 ${className}`}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setStatus('idle');
-          }}
-          placeholder="Enter your email"
-          className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-          disabled={status === 'loading'}
-        />
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className="px-4 py-2 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
+      <>
+        <iframe name="loops-compact" style={{ display: 'none' }} />
+        <form 
+          action={LOOPS_ENDPOINT}
+          method="POST"
+          target="loops-compact"
+          onSubmit={handleSubmit}
+          className={`flex gap-2 ${className}`}
         >
-          {status === 'loading' ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            'Join'
-          )}
-        </button>
-      </form>
+          <input
+            type="email"
+            name="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setStatus('idle');
+            }}
+            placeholder="Enter your email"
+            className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            disabled={status === 'loading'}
+          />
+          <button
+            type="submit"
+            disabled={status === 'loading'}
+            className="px-4 py-2 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {status === 'loading' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              'Join'
+            )}
+          </button>
+        </form>
+      </>
     );
   }
 
   if (variant === 'stacked') {
     return (
-      <form onSubmit={handleSubmit} className={`space-y-3 ${className}`}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setStatus('idle');
-          }}
-          placeholder="Enter your email address"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-          disabled={status === 'loading'}
-        />
-        {status === 'error' && (
-          <p className="text-sm text-red-500">{errorMessage}</p>
-        )}
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className="w-full px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+      <>
+        <iframe name="loops-stacked" style={{ display: 'none' }} />
+        <form 
+          action={LOOPS_ENDPOINT}
+          method="POST"
+          target="loops-stacked"
+          onSubmit={handleSubmit}
+          className={`space-y-3 ${className}`}
         >
-          {status === 'loading' ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Joining...
-            </>
-          ) : (
-            <>
-              <Send className="w-5 h-5" />
-              Join the Waitlist
-            </>
+          <input
+            type="email"
+            name="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setStatus('idle');
+            }}
+            placeholder="Enter your email address"
+            className="w-full px-4 py-3 rounded-xl border-2 border-border bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+            disabled={status === 'loading'}
+          />
+          {status === 'error' && (
+            <p className="text-sm text-red-500">{errorMessage}</p>
           )}
-        </button>
-        <p className="text-xs text-muted-foreground text-center">
-          No spam, ever. Unsubscribe anytime.
-        </p>
-      </form>
+          <button
+            type="submit"
+            disabled={status === 'loading'}
+            className="w-full px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {status === 'loading' ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Joining...
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5" />
+                Join the Waitlist
+              </>
+            )}
+          </button>
+          <p className="text-xs text-muted-foreground text-center">
+            No spam, ever. Unsubscribe anytime.
+          </p>
+        </form>
+      </>
     );
   }
 
   // Inline variant (default)
   return (
-    <form onSubmit={handleSubmit} className={`${className}`}>
-      <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setStatus('idle');
-          }}
-          placeholder="Enter your email address"
-          className="flex-1 px-5 py-4 rounded-xl border-2 border-border bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
-          disabled={status === 'loading'}
-        />
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className="px-8 py-4 rounded-xl font-semibold text-white bg-primary shadow-lg hover:bg-primary/90 hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
-        >
-          {status === 'loading' ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Joining...
-            </>
-          ) : (
-            <>
-              <Send className="w-5 h-5" />
-              Join Waitlist
-            </>
-          )}
-        </button>
-      </div>
-      {status === 'error' && (
-        <p className="text-sm text-red-500 text-center mt-2">{errorMessage}</p>
-      )}
-      <p className="text-xs text-muted-foreground text-center mt-3">
-        Join 500+ people waiting. No spam, ever.
-      </p>
-    </form>
+    <>
+      <iframe name="loops-inline" style={{ display: 'none' }} />
+      <form 
+        action={LOOPS_ENDPOINT}
+        method="POST"
+        target="loops-inline"
+        onSubmit={handleSubmit}
+        className={`${className}`}
+      >
+        <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+          <input
+            type="email"
+            name="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setStatus('idle');
+            }}
+            placeholder="Enter your email address"
+            className="flex-1 px-5 py-4 rounded-xl border-2 border-border bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+            disabled={status === 'loading'}
+          />
+          <button
+            type="submit"
+            disabled={status === 'loading'}
+            className="px-8 py-4 rounded-xl font-semibold text-white bg-primary shadow-lg hover:bg-primary/90 hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
+          >
+            {status === 'loading' ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Joining...
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5" />
+                Join Waitlist
+              </>
+            )}
+          </button>
+        </div>
+        {status === 'error' && (
+          <p className="text-sm text-red-500 text-center mt-2">{errorMessage}</p>
+        )}
+        <p className="text-xs text-muted-foreground text-center mt-3">
+          Join 500+ people waiting. No spam, ever.
+        </p>
+      </form>
+    </>
   );
 };
 

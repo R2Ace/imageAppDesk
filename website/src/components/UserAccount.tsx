@@ -59,36 +59,16 @@ const UserAccount: React.FC<UserAccountProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (userEmail && userEmail.includes('@')) {
-      try {
-        // Send to Loops.so
-        const response = await fetch('https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email: userEmail })
+      setIsLoggedIn(true);
+      // Track in Mixpanel
+      import('../lib/mixpanel').then(({ trackEvent }) => {
+        trackEvent('User Login', { 
+          email: userEmail,
+          source: 'profile-popup'
         });
-
-        if (response.ok) {
-          setIsLoggedIn(true);
-          // Track in Mixpanel
-          import('../lib/mixpanel').then(({ trackEvent }) => {
-            trackEvent('User Login', { 
-              email: userEmail,
-              source: 'profile-popup'
-            });
-          });
-        } else {
-          // Still allow login even if Loops fails
-          setIsLoggedIn(true);
-        }
-      } catch (error) {
-        console.error('Form submission failed:', error);
-        // Still allow login even if submission fails
-        setIsLoggedIn(true);
-      }
+      });
     } else {
       alert('Please enter a valid email address');
     }

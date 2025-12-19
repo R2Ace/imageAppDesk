@@ -535,24 +535,19 @@ const ConverterHero = () => {
                 </p>
 
                 {!isSubmitted ? (
+                  <>
+                  <iframe name="loops-frame" style={{ display: 'none' }} />
                   <form 
-                    onSubmit={async (e) => {
-                      e.preventDefault();
+                    action="https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol"
+                    method="POST"
+                    target="loops-frame"
+                    onSubmit={() => {
                       setIsSubmitting(true);
-                      try {
-                        const response = await fetch('https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email })
-                        });
-                        if (response.ok) {
-                          setIsSubmitted(true);
-                        }
-                      } catch (error) {
-                        console.error('Form submission failed:', error);
-                      } finally {
+                      // Show success state after form submits to hidden iframe
+                      setTimeout(() => {
+                        setIsSubmitted(true);
                         setIsSubmitting(false);
-                      }
+                      }, 1000);
                     }}
                     className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
                   >
@@ -576,6 +571,7 @@ const ConverterHero = () => {
                       <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </form>
+                  </>
                 ) : (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
