@@ -151,16 +151,14 @@ const WaitlistCTA = () => {
 
                 {!isSubmitted ? (
                   <form 
-                    action="https://formspree.io/f/xvzponok"
-                    method="POST"
                     className="flex flex-col sm:flex-row gap-3"
                     onSubmit={async (e) => {
                       e.preventDefault();
                       try {
-                        const response = await fetch('https://formspree.io/f/xvzponok', {
+                        const response = await fetch('https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email, source: 'waitlist-cta' })
+                          body: JSON.stringify({ email })
                         });
                         if (response.ok) {
                           setIsSubmitted(true);

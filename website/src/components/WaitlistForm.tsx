@@ -7,7 +7,7 @@ interface WaitlistFormProps {
   className?: string;
 }
 
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xvzponok';
+const LOOPS_ENDPOINT = 'https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol';
 
 const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', className = '' }) => {
   const [email, setEmail] = useState('');
@@ -35,14 +35,10 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
     }
     
     try {
-      const response = await fetch(FORMSPREE_ENDPOINT, {
+      const response = await fetch(LOOPS_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email, 
-          source: `waitlist-form-${variant}`,
-          timestamp: new Date().toISOString()
-        })
+        body: JSON.stringify({ email })
       });
       
       if (response.ok) {

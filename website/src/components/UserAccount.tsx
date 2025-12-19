@@ -62,17 +62,13 @@ const UserAccount: React.FC<UserAccountProps> = ({ isOpen, onClose }) => {
   const handleLogin = async () => {
     if (userEmail && userEmail.includes('@')) {
       try {
-        // Send to Formspree
-        const response = await fetch('https://formspree.io/f/xvzponok', {
+        // Send to Loops.so
+        const response = await fetch('https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            email: userEmail,
-            source: 'profile-login',
-            timestamp: new Date().toISOString()
-          })
+          body: JSON.stringify({ email: userEmail })
         });
 
         if (response.ok) {
@@ -85,7 +81,7 @@ const UserAccount: React.FC<UserAccountProps> = ({ isOpen, onClose }) => {
             });
           });
         } else {
-          // Still allow login even if Formspree fails
+          // Still allow login even if Loops fails
           setIsLoggedIn(true);
         }
       } catch (error) {
