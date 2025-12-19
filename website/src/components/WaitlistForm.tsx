@@ -55,7 +55,7 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
       const formData = new FormData();
       formData.append('email_address', email);
       
-      const response = await fetch('https://app.kit.com/forms/8475501/subscriptions', {
+      const response = await fetch('https://app.kit.com/forms/8887361/subscriptions', {
         method: 'POST',
         body: formData,
         mode: 'no-cors' // ConvertKit doesn't support CORS for form submissions

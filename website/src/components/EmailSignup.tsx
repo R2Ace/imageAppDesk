@@ -25,7 +25,7 @@ const EmailSignup: React.FC = () => {
     <div className="max-w-2xl mx-auto">
       {/* Kit.com Newsletter Form */}
       <form 
-        action="https://app.kit.com/forms/8475501/subscriptions" 
+        action="https://app.kit.com/forms/8887361/subscriptions" 
         className="seva-form formkit-form" 
         method="post" 
         data-sv-form="8475501" 

@@ -63,7 +63,7 @@ const UserAccount: React.FC<UserAccountProps> = ({ isOpen, onClose }) => {
     if (userEmail && userEmail.includes('@')) {
       try {
         // Send to ConvertKit API
-        const response = await fetch('https://api.kit.com/v3/forms/8475501/subscribe', {
+        const response = await fetch('https://api.kit.com/v3/forms/8887361/subscribe', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -537,7 +537,7 @@ const ConverterHero = () => {
 
                 {!isSubmitted ? (
                   <form 
-                    action="https://app.kit.com/forms/8475501/subscriptions"
+                    action="https://app.kit.com/forms/8887361/subscriptions"
                     method="post"
                     data-sv-form="8475501"
                     className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
