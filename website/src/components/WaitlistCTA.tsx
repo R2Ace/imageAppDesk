@@ -153,9 +153,12 @@ const WaitlistCTA = () => {
                   <form 
                     action="https://app.kit.com/forms/8887361/subscriptions"
                     method="post"
-                    data-sv-form="8475501"
+                    target="_blank"
                     className="flex flex-col sm:flex-row gap-3"
-                    onSubmit={() => setIsSubmitted(true)}
+                    onSubmit={(e) => {
+                      console.log('WaitlistCTA form submitted');
+                      setTimeout(() => setIsSubmitted(true), 500);
+                    }}
                   >
                     <input
                       type="email"
@@ -166,14 +169,15 @@ const WaitlistCTA = () => {
                       required
                       className="flex-1 px-4 py-3 border-2 border-white/20 rounded-xl bg-white/10 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200"
                     />
-                    <Button
+                    <button
                       type="submit"
-                      className="bg-white text-foreground hover:bg-white/90 font-semibold px-6 py-3 rounded-xl group whitespace-nowrap"
+                      disabled={!email}
+                      className="inline-flex items-center justify-center bg-white text-foreground hover:bg-white/90 font-semibold px-6 py-3 rounded-xl group whitespace-nowrap transition-all disabled:opacity-50"
                     >
                       <Mail className="mr-2 h-4 w-4" />
                       Join Waitlist
                       <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
+                    </button>
                   </form>
                 ) : (
                   <motion.div

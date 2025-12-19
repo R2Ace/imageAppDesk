@@ -539,7 +539,14 @@ const ConverterHero = () => {
                   <form 
                     action="https://app.kit.com/forms/8887361/subscriptions"
                     method="post"
-                    data-sv-form="8475501"
+                    target="_blank"
+                    onSubmit={(e) => {
+                      console.log('Form submitted with email:', email);
+                      // Let the form submit naturally to Kit
+                      setTimeout(() => {
+                        setIsSubmitted(true);
+                      }, 500);
+                    }}
                     className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
                   >
                     <input
@@ -551,17 +558,15 @@ const ConverterHero = () => {
                       required
                       className="flex-1 px-4 py-3 border-2 border-input rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 bg-background text-foreground"
                     />
-                    <Button
+                    <button
                       type="submit"
-                      variant="premium"
-                      size="lg"
-                      disabled={isSubmitting}
-                      className="group whitespace-nowrap"
+                      disabled={isSubmitting || !email}
+                      className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-accent-warm to-amber text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group whitespace-nowrap"
                     >
                       <Mail className="mr-2 h-4 w-4" />
                       Join Waitlist
                       <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
+                    </button>
                   </form>
                 ) : (
                   <motion.div
