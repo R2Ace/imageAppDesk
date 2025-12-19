@@ -584,7 +584,7 @@ const ConverterHero = () => {
                 )}
 
                 <p className="text-xs text-muted-foreground mt-4">
-                  Join 500+ people waiting for launch. No spam, ever.
+                  Be among the first to get access. No spam, ever.
                 </p>
               </div>
             </Card>

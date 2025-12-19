@@ -195,7 +195,7 @@ const WaitlistCTA = () => {
                 )}
 
                 <p className="text-white/50 text-sm mt-4">
-                  Join 500+ people on the waitlist. Unsubscribe anytime.
+                  Be first in line for launch. Unsubscribe anytime.
                 </p>
               </div>
             </Card>

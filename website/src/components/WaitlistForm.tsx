@@ -200,7 +200,7 @@ const WaitlistForm: React.FC<WaitlistFormProps> = ({ variant = 'inline', classNa
           <p className="text-sm text-red-500 text-center mt-2">{errorMessage}</p>
         )}
         <p className="text-xs text-muted-foreground text-center mt-3">
-          Join 500+ people waiting. No spam, ever.
+          Be among the first to know. No spam, ever.
         </p>
       </form>
     </>
