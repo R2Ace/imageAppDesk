@@ -61,10 +61,9 @@ const ConverterHero = () => {
   // Handle file selection
   const handleFileSelect = (file: File | null) => {
     if (file && file.type.startsWith('image/')) {
-      const fileWithPreview: FileWithPreview = {
-        ...file,
+      const fileWithPreview = Object.assign(file, {
         preview: URL.createObjectURL(file)
-      } as FileWithPreview;
+      }) as FileWithPreview;
       setSelectedFile(fileWithPreview);
       setIsConverted(false);
       setConvertedFile(null);
