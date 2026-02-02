@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { Analytics } from '@vercel/analytics/react'
 import ConverterHero from './components/ConverterHero'
 import SocialProof from './components/SocialProof'
 import Features from './components/Features'
@@ -34,7 +33,6 @@ function App() {
       </main>
       
       <Footer />
-      <Analytics />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Mail } from 'lucide-react';
+import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Mail, Shield } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 
@@ -211,28 +211,49 @@ const ConverterHero = () => {
         >
           {/* Header */}
           <motion.div variants={itemVariants} className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              <Zap className="w-4 h-4" />
-              Try it free — no signup required
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold mb-6 privacy-badge">
+              <Shield className="w-4 h-4" />
+              Privacy First
             </div>
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6">
-              Convert files in
+              We Sell
               <br />
-              <span className="text-gradient">3 simple steps</span>
+              <span className="text-gradient">Privacy.</span>
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              The fastest, most private file converter. Works right in your browser — 
-              your files never leave your device.
+              The fastest file converter that never touches your files.
+              <br />
+              <span className="font-medium text-foreground">No uploads. No tracking. No exceptions.</span>
             </p>
           </motion.div>
 
-          {/* 3-Step Converter */}
+          {/* 3-Step Converter - Privacy Safe Zone */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-col xl:flex-row items-center justify-center gap-6 lg:gap-8 mb-16"
+            className="relative mb-16"
           >
+            {/* Privacy Safe Zone Border */}
+            <div className="absolute -inset-4 md:-inset-6 border-2 border-dashed border-emerald-200 rounded-3xl opacity-60" />
+            <div className="absolute -inset-4 md:-inset-6 bg-gradient-to-b from-emerald-50/30 to-transparent rounded-3xl" />
+            
+            {/* Floating Privacy Indicators */}
+            <motion.div 
+              className="absolute -top-3 left-1/2 -translate-x-1/2 z-20"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-lg border border-emerald-200">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                <span className="text-xs font-semibold text-emerald-700">Local Processing Only</span>
+                <Shield className="w-3 h-3 text-emerald-600" />
+              </div>
+            </motion.div>
+
+            <div className="flex flex-col xl:flex-row items-center justify-center gap-6 lg:gap-8 relative z-10 pt-6">
+          
             {/* Step 1: Upload */}
             <motion.div 
               className="relative"
@@ -491,6 +512,20 @@ const ConverterHero = () => {
                   )}
                 </div>
               </Card>
+            </motion.div>
+            </div>
+            
+            {/* Bottom Privacy Indicator */}
+            <motion.div 
+              className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-lg border border-emerald-200">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                <span className="text-xs font-semibold text-emerald-700">Zero Uploads</span>
+              </div>
             </motion.div>
           </motion.div>
 
