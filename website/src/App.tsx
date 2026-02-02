@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import ConverterHero from './components/ConverterHero'
 import SocialProof from './components/SocialProof'
 import Features from './components/Features'
+import Blog from './components/Blog'
 import WaitlistCTA from './components/WaitlistCTA'
 import Footer from './components/Footer'
 import StickyWaitlistBar from './components/StickyWaitlistBar'
@@ -16,7 +17,7 @@ function App() {
     // Track page view
     trackEvent('React Landing Page Visit', {
       page: 'Waitlist Landing',
-      design_version: 'waitlist_v1',
+      design_version: 'competitor_focused_v2',
       timestamp: new Date().toISOString()
     })
   }, [])
@@ -29,6 +30,7 @@ function App() {
         <ConverterHero />
         <SocialProof />
         <Features />
+        <Blog />
         <WaitlistCTA />
       </main>
       

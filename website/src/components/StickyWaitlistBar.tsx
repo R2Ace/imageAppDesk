@@ -39,17 +39,17 @@ const StickyWaitlistBar = () => {
               {/* Left side - App info */}
               <div className="flex items-center gap-3">
                 <motion.div
-                  className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center"
+                  className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center"
                   whileHover={{ scale: 1.05, rotate: 5 }}
                   transition={{ type: "spring", stiffness: 400 }}
                 >
-                  <Sparkles className="w-4 h-4 text-white" />
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
                 </motion.div>
                 
                 <div className="hidden sm:block">
-                  <h3 className="font-semibold text-sm">Épure</h3>
+                  <h3 className="font-semibold text-sm">Épure - $9 once</h3>
                   <p className="text-xs text-white/60">
-                    Desktop app launching soon
+                    Not $180/year like web tools
                   </p>
                 </div>
               </div>
@@ -58,11 +58,11 @@ const StickyWaitlistBar = () => {
               <div className="hidden lg:flex items-center gap-6 text-xs text-white/70">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>
-                  <span>Batch processing</span>
+                  <span>500+ files at once</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                  <span>HEIC support</span>
+                  <span>Zero uploads</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
@@ -74,10 +74,10 @@ const StickyWaitlistBar = () => {
               <div className="flex items-center gap-2">
                 <Button 
                   onClick={scrollToWaitlist}
-                  className="bg-white text-foreground hover:bg-white/90 text-sm font-medium px-4 py-2 rounded-lg group"
+                  className="bg-emerald-500 text-white hover:bg-emerald-600 text-sm font-medium px-4 py-2 rounded-lg group"
                 >
-                  <span className="hidden sm:inline">Join Waitlist</span>
-                  <span className="sm:hidden">Join</span>
+                  <span className="hidden sm:inline">Get Early Access</span>
+                  <span className="sm:hidden">Get Access</span>
                   <ArrowRight className="ml-2 h-3 w-3 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 

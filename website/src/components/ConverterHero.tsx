@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Mail, Shield } from 'lucide-react';
+import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Mail, Shield, Clock, XCircle, CheckCircle, DollarSign, Wifi, WifiOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 
@@ -211,22 +211,42 @@ const ConverterHero = () => {
         >
           {/* Header */}
           <motion.div variants={itemVariants} className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold mb-6 privacy-badge">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold mb-6">
               <Shield className="w-4 h-4" />
-              Privacy First
+              100% Local - Files Never Uploaded
             </div>
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6">
-              We Sell
+              Tired of slow, sketchy
               <br />
-              <span className="text-gradient">Privacy.</span>
+              <span className="text-gradient">web converters?</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              The fastest file converter that never touches your files.
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
+              Convert <span className="font-bold text-foreground">500 files in 2 minutes</span>. No uploads. No subscriptions. No limits.
               <br />
-              <span className="font-medium text-foreground">No uploads. No tracking. No exceptions.</span>
+              <span className="font-semibold text-primary">$9 once - works forever.</span>
             </p>
+
+            {/* Quick Comparison Pills */}
+            <div className="flex flex-wrap justify-center gap-3 mb-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-50 text-red-600 text-sm">
+                <XCircle className="w-4 h-4" />
+                <span>Web: 5 files max</span>
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-sm font-medium">
+                <CheckCircle className="w-4 h-4" />
+                <span>Epure: 500+ files</span>
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-50 text-red-600 text-sm">
+                <DollarSign className="w-4 h-4" />
+                <span>Web: $15/month</span>
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-sm font-medium">
+                <CheckCircle className="w-4 h-4" />
+                <span>Epure: $9 forever</span>
+              </div>
+            </div>
           </motion.div>
 
           {/* 3-Step Converter - Privacy Safe Zone */}
@@ -238,17 +258,28 @@ const ConverterHero = () => {
             <div className="absolute -inset-4 md:-inset-6 border-2 border-dashed border-emerald-200 rounded-3xl opacity-60" />
             <div className="absolute -inset-4 md:-inset-6 bg-gradient-to-b from-emerald-50/30 to-transparent rounded-3xl" />
             
-            {/* Floating Privacy Indicators */}
+            {/* Floating Indicators */}
             <motion.div 
-              className="absolute -top-3 left-1/2 -translate-x-1/2 z-20"
+              className="absolute -top-3 left-1/4 z-20 hidden md:block"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-lg border border-primary/20">
+                <Clock className="w-3 h-3 text-primary" />
+                <span className="text-xs font-semibold text-foreground">3x Faster</span>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              className="absolute -top-3 right-1/4 z-20 hidden md:block"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-lg border border-emerald-200">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                <span className="text-xs font-semibold text-emerald-700">Local Processing Only</span>
                 <Shield className="w-3 h-3 text-emerald-600" />
+                <span className="text-xs font-semibold text-emerald-700">Zero Uploads</span>
               </div>
             </motion.div>
 
@@ -515,16 +546,16 @@ const ConverterHero = () => {
             </motion.div>
             </div>
             
-            {/* Bottom Privacy Indicator */}
+            {/* Bottom Indicator */}
             <motion.div 
               className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-lg border border-emerald-200">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                <span className="text-xs font-semibold text-emerald-700">Zero Uploads</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-lg border border-blue-200">
+                <WifiOff className="w-3 h-3 text-blue-600" />
+                <span className="text-xs font-semibold text-blue-700">Works Offline</span>
               </div>
             </motion.div>
           </motion.div>
@@ -549,25 +580,39 @@ const ConverterHero = () => {
               </motion.div>
             )}
 
-            {/* Waitlist CTA */}
-            <Card className="max-w-2xl mx-auto p-8 bg-gradient-to-br from-primary/5 via-background to-accent-warm/5 border-2 border-primary/10 shadow-xl">
+            {/* Desktop App CTA */}
+            <Card className="max-w-3xl mx-auto p-8 bg-gradient-to-br from-foreground via-foreground to-foreground/95 text-white shadow-2xl">
               <div className="text-center">
                 <motion.div
                   animate={{ y: [0, -5, 0] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-warm/10 text-accent-warm text-sm font-semibold mb-4"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-sm font-semibold mb-4"
                 >
                   <Zap className="w-4 h-4" />
-                  Desktop App Coming Soon
+                  Ready to Download
                 </motion.div>
                 
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                  Want 10x more power?
+                <h2 className="text-2xl md:text-3xl font-bold mb-3">
+                  Stop wasting time with web converters
                 </h2>
-                <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-                  The desktop app includes batch processing, HEIC support, 20+ formats, 
-                  audio conversion, and works completely offline.
+                <p className="text-white/70 mb-6 max-w-lg mx-auto">
+                  Get the full desktop app: batch processing for 500+ files, HEIC support, 
+                  20+ formats, and works completely offline. <span className="text-white font-semibold">One price, forever.</span>
                 </p>
+
+                {/* Comparison Mini Table */}
+                <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-6 text-sm">
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <div className="text-white/50 text-xs mb-2">Web Converters</div>
+                    <div className="text-white/80">$15-24/month</div>
+                    <div className="text-white/50 text-xs">= $180-288/year</div>
+                  </div>
+                  <div className="bg-emerald-500/20 rounded-xl p-4 border border-emerald-400/30">
+                    <div className="text-emerald-300 text-xs mb-2">Epure</div>
+                    <div className="text-white font-bold">$9 once</div>
+                    <div className="text-emerald-300 text-xs">Forever yours</div>
+                  </div>
+                </div>
 
                 {!isSubmitted ? (
                   <>
@@ -578,7 +623,6 @@ const ConverterHero = () => {
                     target="loops-frame"
                     onSubmit={() => {
                       setIsSubmitting(true);
-                      // Show success state after form submits to hidden iframe
                       setTimeout(() => {
                         setIsSubmitted(true);
                         setIsSubmitting(false);
@@ -591,18 +635,16 @@ const ConverterHero = () => {
                       name="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
+                      placeholder="Enter your email for launch access"
                       required
-                      className="flex-1 px-4 py-3 border-2 border-input rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 bg-background text-foreground"
+                      className="flex-1 px-4 py-3 border-2 border-white/20 rounded-xl bg-white/10 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200"
                     />
                     <Button
                       type="submit"
                       disabled={isSubmitting || !email}
-                      variant="premium"
-                      className="group whitespace-nowrap"
+                      className="bg-white text-foreground hover:bg-white/90 font-semibold group whitespace-nowrap"
                     >
-                      <Mail className="mr-2 h-4 w-4" />
-                      {isSubmitting ? 'Joining...' : 'Join Waitlist'}
+                      {isSubmitting ? 'Joining...' : 'Get Early Access'}
                       <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </form>
@@ -611,15 +653,15 @@ const ConverterHero = () => {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center justify-center gap-2 text-emerald-600 font-medium"
+                    className="flex items-center justify-center gap-2 text-emerald-400 font-medium"
                   >
                     <Check className="w-5 h-5" />
                     You're on the list! Check your email.
                   </motion.div>
                 )}
 
-                <p className="text-xs text-muted-foreground mt-4">
-                  Be among the first to get access. No spam, ever.
+                <p className="text-xs text-white/50 mt-4">
+                  30-day money-back guarantee. No subscriptions, ever.
                 </p>
               </div>
             </Card>
