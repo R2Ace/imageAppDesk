@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Mail, Shield, Clock, XCircle, CheckCircle, DollarSign, Wifi, WifiOff } from 'lucide-react';
+import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Mail, Shield, Clock, XCircle, CheckCircle, DollarSign, Wifi, WifiOff, ShoppingCart } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { CHECKOUT_URL } from '../lib/payment';
 
 interface FileWithPreview extends File {
   preview: string;
@@ -20,9 +21,6 @@ const ConverterHero = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isConverted, setIsConverted] = useState<boolean>(false);
   const [convertedFile, setConvertedFile] = useState<ConvertedFile | null>(null);
-  const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Animation variants
@@ -166,31 +164,6 @@ const ConverterHero = () => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const handleWaitlistSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    setIsSubmitting(true);
-    
-    // Track signup attempt
-    if (typeof window !== 'undefined' && (window as any).mixpanel) {
-      (window as any).mixpanel.track('Waitlist Signup', {
-        source: 'Hero Section',
-        email: email
-      });
-    }
-
-    // Form submission handled via onSubmit
-    try {
-      // The form action will handle the actual submission
-      setIsSubmitted(true);
-    } catch (error) {
-      console.error('Signup failed:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   return (
@@ -614,55 +587,43 @@ const ConverterHero = () => {
                   </div>
                 </div>
 
-                {!isSubmitted ? (
-                  <>
-                  <iframe name="loops-frame" style={{ display: 'none' }} />
-                  <form 
-                    action="https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol"
-                    method="POST"
-                    target="loops-frame"
-                    onSubmit={() => {
-                      setIsSubmitting(true);
-                      setTimeout(() => {
-                        setIsSubmitted(true);
-                        setIsSubmitting(false);
-                      }, 1000);
-                    }}
-                    className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+                <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
+                  <Button
+                    onClick={() => window.open(CHECKOUT_URL, '_blank')}
+                    className="w-full bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg py-6 rounded-xl group shadow-lg shadow-emerald-500/25"
                   >
-                    <input
-                      type="email"
-                      name="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email for launch access"
-                      required
-                      className="flex-1 px-4 py-3 border-2 border-white/20 rounded-xl bg-white/10 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200"
-                    />
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting || !email}
-                      className="bg-white text-foreground hover:bg-white/90 font-semibold group whitespace-nowrap"
-                    >
-                      {isSubmitting ? 'Joining...' : 'Get Early Access'}
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </form>
-                  </>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center justify-center gap-2 text-emerald-400 font-medium"
-                  >
-                    <Check className="w-5 h-5" />
-                    You're on the list! Check your email.
-                  </motion.div>
-                )}
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Get Épure for $9
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                  
+                  <div className="flex items-center gap-4 text-xs text-white/50">
+                    <span className="flex items-center gap-1">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      Instant download
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      License key included
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      Lifetime updates
+                    </span>
+                  </div>
+                </div>
 
                 <p className="text-xs text-white/50 mt-4">
                   30-day money-back guarantee. No subscriptions, ever.
                 </p>
+
+                {/* First-launch instructions for Mac users */}
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <p className="text-xs text-white/40">
+                    <span className="font-medium text-white/60">First time opening on Mac?</span>{' '}
+                    Right-click the app → Open. This is normal for indie Mac apps not from the App Store.
+                  </p>
+                </div>
               </div>
             </Card>
           </motion.div>

@@ -16,7 +16,10 @@ app.use(cors());
 app.use(express.json());
 
 // Raw body parser for Stripe webhooks (must be before other middleware)
-app.use('/webhook', express.raw({ type: 'application/json' }));
+app.use('/webhook/stripe', express.raw({ type: 'application/json' }));
+
+// JSON parser for Lemon Squeezy webhooks
+app.use('/webhook/lemonsqueezy', express.json());
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -137,6 +140,107 @@ app.get('/api/licenses/:email', async (req, res) => {
   }
 });
 
+// ============================================
+// LEMON SQUEEZY INTEGRATION
+// ============================================
+
+// Lemon Squeezy webhook handler
+app.post('/webhook/lemonsqueezy', async (req, res) => {
+  try {
+    // Verify webhook signature (optional but recommended)
+    const signature = req.headers['x-signature'];
+    
+    // For now, we'll process without signature verification
+    // TODO: Add signature verification with LEMONSQUEEZY_WEBHOOK_SECRET
+    
+    const event = req.body;
+    console.log('🍋 Lemon Squeezy webhook received:', event.meta?.event_name);
+
+    // Handle order completed event
+    if (event.meta?.event_name === 'order_created') {
+      const orderData = event.data?.attributes;
+      const customerEmail = orderData?.user_email;
+      const orderId = event.data?.id;
+      const amount = orderData?.total; // in cents
+      const currency = orderData?.currency;
+
+      console.log('📦 Order created:', { orderId, customerEmail, amount });
+
+      // Generate license key
+      const licenseKey = LicenseGenerator.generateLicenseKey();
+      console.log('🔑 Generated license:', licenseKey);
+
+      // Store in database
+      await licenseDB.storeLicense(
+        licenseKey,
+        `ls_${orderId}`, // Prefix with ls_ to identify Lemon Squeezy orders
+        customerEmail,
+        amount,
+        currency || 'usd'
+      );
+
+      // Send license email
+      await emailService.sendLicenseEmail(
+        customerEmail,
+        licenseKey,
+        amount
+      );
+
+      console.log('✅ License generated and emailed via Lemon Squeezy webhook');
+    }
+
+    res.json({ received: true });
+  } catch (error) {
+    console.error('❌ Lemon Squeezy webhook error:', error);
+    res.status(500).json({ error: 'Webhook processing failed' });
+  }
+});
+
+// Manual license creation endpoint (for quick setup tonight)
+// Use this to add licenses manually when you get Lemon Squeezy purchases
+// POST /api/admin/create-license
+// Body: { email: "customer@email.com", adminKey: "your-secret-key" }
+app.post('/api/admin/create-license', async (req, res) => {
+  try {
+    const { email, adminKey } = req.body;
+    
+    // Simple admin key check (set ADMIN_KEY in your environment)
+    const expectedAdminKey = process.env.ADMIN_KEY || 'epure-admin-2024';
+    if (adminKey !== expectedAdminKey) {
+      return res.status(401).json({ success: false, error: 'Invalid admin key' });
+    }
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+
+    // Generate license key
+    const licenseKey = LicenseGenerator.generateLicenseKey();
+    console.log('🔑 Admin created license for:', email);
+
+    // Store in database
+    await licenseDB.storeLicense(
+      licenseKey,
+      `manual_${Date.now()}`,
+      email,
+      900, // $9.00
+      'usd'
+    );
+
+    // Send license email
+    await emailService.sendLicenseEmail(email, licenseKey, 900);
+
+    res.json({ 
+      success: true, 
+      licenseKey,
+      message: `License created and emailed to ${email}`
+    });
+  } catch (error) {
+    console.error('❌ Admin license creation error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Feedback submission endpoint
 app.post('/api/feedback', async (req, res) => {
   try {
@@ -229,7 +333,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
 });
 
 // Stripe webhook endpoint
-app.post('/webhook', async (req, res) => {
+app.post('/webhook/stripe', async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
 

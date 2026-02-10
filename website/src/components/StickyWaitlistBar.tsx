@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ArrowRight, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { CHECKOUT_URL } from '../lib/payment';
 
 const StickyWaitlistBar = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
-  const [email, setEmail] = useState('');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,10 +19,6 @@ const StickyWaitlistBar = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isDismissed]);
-
-  const scrollToWaitlist = () => {
-    document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   return (
     <AnimatePresence>
@@ -73,11 +69,11 @@ const StickyWaitlistBar = () => {
               {/* Right side - CTA */}
               <div className="flex items-center gap-2">
                 <Button 
-                  onClick={scrollToWaitlist}
+                  onClick={() => window.open(CHECKOUT_URL, '_blank')}
                   className="bg-emerald-500 text-white hover:bg-emerald-600 text-sm font-medium px-4 py-2 rounded-lg group"
                 >
-                  <span className="hidden sm:inline">Get Early Access</span>
-                  <span className="sm:hidden">Get Access</span>
+                  <span className="hidden sm:inline">Get Épure - $9</span>
+                  <span className="sm:hidden">Buy $9</span>
                   <ArrowRight className="ml-2 h-3 w-3 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 

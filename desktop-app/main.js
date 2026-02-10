@@ -332,6 +332,30 @@ autoUpdater.on('update-downloaded', () => {
 
 // IPC handlers (moved to separate function for organization)
 function setupIPCHandlers() {
+  // Open folder in system file manager
+  ipcMain.handle('open-folder', async (event, folderPath) => {
+    try {
+      await shell.openPath(folderPath);
+      log.info('Opened folder:', folderPath);
+      return true;
+    } catch (error) {
+      log.error('Failed to open folder:', error.message);
+      return false;
+    }
+  });
+
+  // Open payment URL in default browser
+  ipcMain.handle('open-payment-url', async (event, url) => {
+    try {
+      await shell.openExternal(url);
+      log.info('Opened payment URL:', url);
+      return true;
+    } catch (error) {
+      log.error('Failed to open payment URL:', error.message);
+      return false;
+    }
+  });
+
   // Settings management
   ipcMain.handle('get-settings', () => {
     try {
@@ -512,29 +536,231 @@ function setupIPCHandlers() {
     }
   });
 
-  // Image processing
+  // Helper function to get unique filename
+  function getUniqueFilename(outputPath, overwrite) {
+    if (overwrite || !fs.existsSync(outputPath)) {
+      return outputPath;
+    }
+    
+    const parsed = path.parse(outputPath);
+    let counter = 1;
+    let newPath = outputPath;
+    
+    while (fs.existsSync(newPath)) {
+      newPath = path.join(parsed.dir, `${parsed.name}_${counter}${parsed.ext}`);
+      counter++;
+    }
+    
+    return newPath;
+  }
+
+  // Helper function to get preset dimensions
+  function getPresetDimensions(preset) {
+    const presets = {
+      '1080p': { width: 1920, height: 1080 },
+      '720p': { width: 1280, height: 720 },
+      '480p': { width: 854, height: 480 },
+      '4k': { width: 3840, height: 2160 },
+      'instagram': { width: 1080, height: 1080 },
+      'twitter': { width: 1200, height: 675 },
+      'custom': null
+    };
+    return presets[preset] || null;
+  }
+
+  // Image processing - Real Sharp-based implementation
   ipcMain.handle('process-images', async (event, { files, settings }) => {
+    log.info('Processing images request received:', files.length, 'files');
+    const startTime = Date.now();
+    
     try {
-      log.info('Processing images request received:', files.length, 'files');
+      const outputDir = store.get('outputDir');
+      log.debug('Output directory:', outputDir);
       
-      // For now, return a mock response
-      // In production, this would use the actual image processing logic
-      const results = files.map((file, index) => ({
-        id: file.id || index,
-        name: file.name,
-        originalSize: file.size,
-        processedSize: Math.floor(file.size * 0.7), // Mock 30% reduction
-        status: 'completed',
-        savings: 30
-      }));
-      
-      log.info('Image processing completed:', results.length, 'files processed');
-      return { success: true, results };
+      const results = [];
+      let totalOriginalSize = 0;
+      let totalNewSize = 0;
+      let successCount = 0;
+
+      // Track batch processing start
+      try {
+        if (analytics && analytics.trackBatchProcessing) {
+          analytics.trackBatchProcessing(files.length, files.reduce((sum, f) => sum + f.size, 0));
+        }
+      } catch (error) {
+        log.error('Failed to track batch processing:', error.message);
+      }
+
+      // Ensure output directory exists
+      if (!fs.existsSync(outputDir)) {
+        log.info('Creating output directory:', outputDir);
+        fs.mkdirSync(outputDir, { recursive: true });
+      }
+
+      // Process files
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const filename = file.name;
+        
+        log.debug(`Processing file ${i + 1}/${files.length}:`, filename);
+        
+        try {
+          // Validate file
+          if (!file.buffer || file.size === 0) {
+            throw new Error('File is empty or corrupted');
+          }
+
+          if (file.size > 200 * 1024 * 1024) { // 200MB limit
+            throw new Error('File size exceeds 200MB limit');
+          }
+
+          const buffer = Buffer.from(file.buffer);
+          const fileInfo = path.parse(filename);
+          const inputFormat = fileInfo.ext.toLowerCase().replace('.', '');
+          
+          // Validate input format
+          const supportedFormats = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'tiff', 'tif'];
+          if (!supportedFormats.includes(inputFormat)) {
+            throw new Error(`Unsupported format: ${inputFormat}`);
+          }
+
+          const outputFilename = `${fileInfo.name}.${settings.format}`;
+          let outputPath = path.join(outputDir, outputFilename);
+          
+          // Handle file conflicts
+          outputPath = getUniqueFilename(outputPath, settings.overwriteFiles);
+
+          // Create Sharp instance
+          let sharpInstance = sharp(buffer, { 
+            limitInputPixels: false,
+            failOnError: false
+          });
+
+          // Strip metadata if requested
+          if (settings.stripMetadata) {
+            sharpInstance = sharpInstance.withMetadata(false);
+          }
+
+          // Get dimensions based on preset or custom
+          let dimensions = null;
+          if (settings.preset === 'custom' && settings.customWidth && settings.customHeight) {
+            dimensions = {
+              width: Math.max(1, Math.min(50000, settings.customWidth)),
+              height: Math.max(1, Math.min(50000, settings.customHeight))
+            };
+          } else if (settings.preset && settings.preset !== 'custom') {
+            dimensions = getPresetDimensions(settings.preset);
+          }
+
+          // Resize if dimensions specified
+          if (dimensions) {
+            sharpInstance = sharpInstance.resize({
+              width: dimensions.width,
+              height: dimensions.height,
+              fit: 'inside',
+              withoutEnlargement: true
+            });
+          }
+
+          // Set output format and quality
+          const quality = Math.max(1, Math.min(100, settings.quality || 80));
+          
+          switch (settings.format) {
+            case 'jpeg':
+            case 'jpg':
+              sharpInstance = sharpInstance.jpeg({ 
+                quality,
+                progressive: true,
+                mozjpeg: true
+              });
+              break;
+            case 'png':
+              sharpInstance = sharpInstance.png({
+                compressionLevel: Math.floor((100 - quality) / 11),
+                progressive: true
+              });
+              break;
+            case 'webp':
+              sharpInstance = sharpInstance.webp({ 
+                quality,
+                effort: 4
+              });
+              break;
+            case 'avif':
+              sharpInstance = sharpInstance.avif({ quality });
+              break;
+            default:
+              sharpInstance = sharpInstance.jpeg({ quality, progressive: true });
+          }
+
+          // Process the image
+          await sharpInstance.toFile(outputPath);
+
+          // Get actual file sizes
+          const originalSize = file.size;
+          const newSize = fs.statSync(outputPath).size;
+          const savingsPercent = Math.round((1 - newSize / originalSize) * 100);
+
+          totalOriginalSize += originalSize;
+          totalNewSize += newSize;
+          successCount++;
+
+          // Track successful conversion
+          if (analytics && analytics.trackFileConverted) {
+            analytics.trackFileConverted(settings.format, inputFormat, originalSize, newSize / originalSize);
+          }
+
+          results.push({
+            name: filename,
+            success: true,
+            originalSize,
+            newSize,
+            savingsPercent,
+            outputPath
+          });
+
+        } catch (error) {
+          log.error(`Error processing ${filename}:`, error.message);
+          
+          results.push({
+            name: filename,
+            success: false,
+            error: error.message
+          });
+        }
+
+        // Send progress update
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('process-progress', {
+            current: i + 1,
+            total: files.length,
+            file: filename
+          });
+        }
+      }
+
+      log.info(`Processing completed: ${successCount}/${files.length} files in ${Date.now() - startTime}ms`);
+
+      return {
+        success: true,
+        results,
+        stats: {
+          totalFiles: files.length,
+          successCount,
+          totalOriginalSize,
+          totalNewSize,
+          totalSavingsPercent: totalOriginalSize > 0 ? Math.round((1 - totalNewSize / totalOriginalSize) * 100) : 0,
+          processingTime: Date.now() - startTime
+        }
+      };
+
     } catch (error) {
-      log.error('Failed to process images:', error.message);
-      return { 
-        success: false, 
-        error: error.message 
+      log.error('Critical error in batch processing:', error.message);
+      
+      return {
+        success: false,
+        error: error.message,
+        results: []
       };
     }
   });

@@ -5,6 +5,7 @@ import { Button } from './ui/button'
 import { Card, CardContent, CardHeader } from './ui/card'
 import { fadeInUp } from '../lib/utils'
 import EmailSignup from './EmailSignup'
+import { CHECKOUT_URL, initiatePayment } from '../lib/payment'
 
 const Pricing = () => {
   // Detect user's operating system
@@ -21,19 +22,7 @@ const Pricing = () => {
     setUserOS(getUserOS())
   }, [])
 
-  const handlePurchase = async () => {
-    // Check if running on localhost - show download link instead
-    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-      // For localhost, download the DMG file from the local server
-      const link = document.createElement('a')
-      link.href = 'http://localhost:3002/Épure-1.0.0.dmg'
-      link.download = 'Épure-1.0.0.dmg'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      return
-    }
-    
+  const handlePurchase = () => {
     // Track purchase attempt
     if (typeof window !== 'undefined' && (window as any).mixpanel) {
       (window as any).mixpanel.track('Purchase Button Clicked', {
@@ -43,14 +32,8 @@ const Pricing = () => {
       })
     }
     
-    // Initiate payment flow
-    try {
-      const { initiatePayment } = await import('../lib/payment')
-      await initiatePayment()
-    } catch (error) {
-      console.error('Payment failed:', error)
-      alert('Payment system temporarily unavailable. Please contact r2thedev@gmail.com')
-    }
+    // Open Lemon Squeezy checkout
+    initiatePayment()
   }
 
   const features = [
