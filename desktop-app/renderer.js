@@ -1280,33 +1280,21 @@ async function testLicenseActivation() {
 const onboardingSteps = [
     {
         target: '#dropZone',
-        title: 'Welcome to Épure! 🎉',
-        description: 'Start by dropping your images here or click to browse files. We support JPG, PNG, WebP, HEIC, and TIFF formats.',
+        title: 'Drop your files here',
+        description: 'Drag and drop images or click to browse. Supports JPG, PNG, WebP, HEIC, TIFF, and AVIF.',
         position: 'bottom'
     },
     {
-        target: '.format-selector',
-        title: 'Choose Your Format',
-        description: 'Select the output format for your images. JPG for photos, PNG for graphics with transparency, WebP for smallest file sizes.',
-        position: 'bottom'
+        target: '.sidebar',
+        title: 'Navigation',
+        description: 'Use the sidebar to switch between converting files, settings, and feedback.',
+        position: 'right'
     },
     {
-        target: '.size-selector',
-        title: 'Set Image Size',
-        description: 'Choose a preset size or use Custom to set your own dimensions. Perfect for social media, web, or print.',
-        position: 'bottom'
-    },
-    {
-        target: '.quality-control',
-        title: 'Adjust Quality',
-        description: 'Control the compression quality. Higher values mean better quality but larger files. 80% is usually perfect.',
-        position: 'bottom'
-    },
-    {
-        target: '#settingsBtn',
-        title: 'Advanced Settings',
-        description: 'Access advanced options like metadata stripping, output folder, and licensing from the settings panel.',
-        position: 'left'
+        target: '#themeToggleBtn',
+        title: 'Customize your theme',
+        description: 'Click to cycle through themes — Dark, Light, Midnight, Sunset, and Forest.',
+        position: 'right'
     }
 ];
 
@@ -1475,49 +1463,91 @@ function showOnboardingFromMenu() {
     startOnboarding();
 }
 
+// ═══════════════════════════════════════
+// THEME SYSTEM
+// ═══════════════════════════════════════
+const THEMES = ['dark', 'light', 'midnight', 'sunset', 'forest'];
+const THEME_ICONS = {
+    dark: `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`,
+    light: `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`,
+    midnight: `<path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/>`,
+    sunset: `<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>`,
+    forest: `<path d="M12 2L2 22h20L12 2z"/>`
+};
+
+function initTheme() {
+    const saved = localStorage.getItem('epure_theme') || 'dark';
+    applyTheme(saved);
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('epure_theme', theme);
+    const icon = document.getElementById('themeIcon');
+    if (icon) icon.innerHTML = THEME_ICONS[theme] || THEME_ICONS.dark;
+}
+
+function cycleTheme() {
+    const current = localStorage.getItem('epure_theme') || 'dark';
+    const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
+    applyTheme(next);
+    showNotification(`Theme: ${next.charAt(0).toUpperCase() + next.slice(1)}`, 'info');
+}
+
+// ═══════════════════════════════════════
+// SIDEBAR LOGIC
+// ═══════════════════════════════════════
+function initSidebar() {
+    const sidebarBtns = document.querySelectorAll('.sidebar-btn[data-view]');
+    sidebarBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const view = btn.dataset.view;
+            if (view === 'settings') {
+                settingsModal.style.display = 'flex';
+            } else if (view === 'feedback') {
+                document.getElementById('feedbackModal').style.display = 'flex';
+            }
+        });
+    });
+
+    const themeBtn = document.getElementById('themeToggleBtn');
+    if (themeBtn) themeBtn.addEventListener('click', cycleTheme);
+
+    const userBtn = document.getElementById('userBtn');
+    if (userBtn) {
+        userBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'flex';
+        });
+    }
+}
+
 // Initialize app after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     init();
     initOnboarding();
-    
-    // Add feedback button functionality
-    const feedbackBtn = document.getElementById('feedbackBtn');
+    initSidebar();
+
     const feedbackModal = document.getElementById('feedbackModal');
     const closeFeedback = document.getElementById('closeFeedback');
     const cancelFeedback = document.getElementById('cancelFeedback');
-    const submitFeedback = document.getElementById('submitFeedback');
-    
-    if (feedbackBtn && feedbackModal) {
-        feedbackBtn.addEventListener('click', () => {
-            feedbackModal.style.display = 'flex';
-        });
-    }
-    
-    if (closeFeedback && feedbackModal) {
-        closeFeedback.addEventListener('click', () => {
-            feedbackModal.style.display = 'none';
-        });
-    }
-    
-    if (cancelFeedback && feedbackModal) {
-        cancelFeedback.addEventListener('click', () => {
-            feedbackModal.style.display = 'none';
-        });
-    }
-    
-    if (submitFeedback) {
-        submitFeedback.addEventListener('click', async () => {
+    const submitFeedbackBtn = document.getElementById('submitFeedback');
+
+    if (closeFeedback) closeFeedback.addEventListener('click', () => feedbackModal.style.display = 'none');
+    if (cancelFeedback) cancelFeedback.addEventListener('click', () => feedbackModal.style.display = 'none');
+
+    if (submitFeedbackBtn) {
+        submitFeedbackBtn.addEventListener('click', async () => {
             const type = document.getElementById('feedbackType')?.value || 'other';
             const title = document.getElementById('feedbackTitle')?.value || '';
             const message = document.getElementById('feedbackMessage')?.value || '';
             const email = document.getElementById('feedbackEmail')?.value || '';
-            
+
             if (!title.trim() || !message.trim()) {
                 showNotification('Please fill in the title and message fields', 'error');
                 return;
             }
-            
-            // Submit feedback to your email via a simple service
+
             const feedback = {
                 type,
                 title: title.trim(),
@@ -1527,36 +1557,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 appVersion: '1.0.0',
                 platform: navigator.platform
             };
-            
+
             try {
-                // Send feedback via email service (you can set up a simple webhook)
                 await submitFeedback(feedback);
-                showNotification('Thank you for your feedback! We appreciate it.', 'success');
+                showNotification('Thank you for your feedback!', 'success');
             } catch (error) {
                 console.error('Failed to submit feedback:', error);
-                // Fallback: copy to clipboard for manual submission
-                const feedbackText = `Feedback Type: ${feedback.type}\nTitle: ${feedback.title}\nMessage: ${feedback.message}\nEmail: ${feedback.email}\nTimestamp: ${feedback.timestamp}\nPlatform: ${feedback.platform}`;
+                const feedbackText = `Type: ${feedback.type}\nTitle: ${feedback.title}\nMessage: ${feedback.message}\nEmail: ${feedback.email}`;
                 navigator.clipboard.writeText(feedbackText).then(() => {
-                    showNotification('Feedback copied to clipboard. Please email it to r2thedev@gmail.com', 'info');
+                    showNotification('Feedback copied. Email to r2thedev@gmail.com', 'info');
                 }).catch(() => {
-                    showNotification('Please email your feedback to r2thedev@gmail.com', 'info');
+                    showNotification('Email feedback to r2thedev@gmail.com', 'info');
                 });
             }
-            
-            // Clear form and close modal
+
             document.getElementById('feedbackTitle').value = '';
             document.getElementById('feedbackMessage').value = '';
             document.getElementById('feedbackEmail').value = '';
             feedbackModal.style.display = 'none';
         });
     }
-    
-    // Close modal when clicking outside
+
     if (feedbackModal) {
         feedbackModal.addEventListener('click', (e) => {
-            if (e.target === feedbackModal) {
-                feedbackModal.style.display = 'none';
-            }
+            if (e.target === feedbackModal) feedbackModal.style.display = 'none';
         });
     }
-}); 
+});

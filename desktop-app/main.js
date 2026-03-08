@@ -173,12 +173,12 @@ function createWindow() {
   log.info('Creating main window...');
   try {
     mainWindow = new BrowserWindow({
-      width: 800,
-      height: 600,
-      minWidth: 600,
-      minHeight: 400,
+      width: 780,
+      height: 620,
+      minWidth: 580,
+      minHeight: 420,
       titleBarStyle: 'hiddenInset',
-      backgroundColor: '#f8fafc',
+      backgroundColor: '#0a0a0a',
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
