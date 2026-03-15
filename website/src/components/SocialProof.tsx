@@ -39,7 +39,7 @@ const SocialProof = () => {
       avatar: "S"
     },
     {
-      quote: "Finally, I don't have to upload client files to random websites. Peace of mind is worth way more than $9.",
+      quote: "Finally, I don't have to upload client files to random websites. The peace of mind alone is worth it.",
       author: "Mike R.",
       role: "Graphic Designer",
       avatar: "M"

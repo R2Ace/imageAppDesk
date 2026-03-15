@@ -1,40 +1,14 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Star } from 'lucide-react'
+import { Check, Mail, ArrowRight } from 'lucide-react'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader } from './ui/card'
 import { fadeInUp } from '../lib/utils'
 import EmailSignup from './EmailSignup'
-import { CHECKOUT_URL, initiatePayment } from '../lib/payment'
 
 const Pricing = () => {
-  // Detect user's operating system
-  const getUserOS = () => {
-    if (typeof window === 'undefined') return 'mac'
-    const userAgent = window.navigator.userAgent.toLowerCase()
-    if (userAgent.includes('win')) return 'windows'
-    return 'mac'
-  }
-  
-  const [userOS, setUserOS] = useState('mac')
-  
-  useEffect(() => {
-    setUserOS(getUserOS())
-  }, [])
-
-  const handlePurchase = () => {
-    // Track purchase attempt
-    if (typeof window !== 'undefined' && (window as any).mixpanel) {
-      (window as any).mixpanel.track('Purchase Button Clicked', {
-        source: 'Pricing Section',
-        price: 9,
-        platform: userOS
-      })
-    }
-    
-    // Open Lemon Squeezy checkout
-    initiatePayment()
-  }
+  const [waitlistEmail, setWaitlistEmail] = useState('')
+  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false)
 
   const features = [
     "Unlimited file processing",
@@ -91,22 +65,21 @@ const Pricing = () => {
           viewport={{ once: true }}
         >
           <Card className="relative bg-gradient-to-br from-white to-primary/5 border-2 border-primary shadow-strong hover:shadow-glow transition-all duration-300">
-            {/* Popular Badge */}
+            {/* Badge */}
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
               <div className="bg-gradient-primary text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                🚀 Launch Week Special
+                🚀 Launching Soon
               </div>
             </div>
 
             <CardHeader className="text-center pt-12 pb-8">
               <div className="mb-4">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-2xl text-muted-foreground line-through">$15</span>
-                  <span className="text-6xl font-bold text-foreground">$9</span>
+                  <span className="text-4xl font-bold text-foreground">One-Time Purchase</span>
                 </div>
-                <p className="text-xl text-muted-foreground">one-time purchase</p>
+                <p className="text-xl text-muted-foreground">Pay once, use forever</p>
                 <div className="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
-                  <span>Save $180+ per year vs competitors</span>
+                  <span>Waitlist members get an exclusive launch discount</span>
                 </div>
               </div>
             </CardHeader>
@@ -129,24 +102,51 @@ const Pricing = () => {
               </ul>
 
               <div className="pt-6">
-                <Button 
-                  onClick={handlePurchase}
-                  variant="premium"
-                  size="xl"
-                  className="w-full text-xl py-6 group"
-                >
-                  Get for {userOS === 'windows' ? 'Windows' : 'Mac'} - $9 Forever
+                {!isWaitlistSubmitted ? (
+                  <>
+                    <iframe name="loops-frame-pricing" style={{ display: 'none' }} />
+                    <form 
+                      action="https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol"
+                      method="POST"
+                      target="loops-frame-pricing"
+                      className="flex flex-col sm:flex-row gap-3"
+                      onSubmit={() => {
+                        setTimeout(() => setIsWaitlistSubmitted(true), 1000);
+                      }}
+                    >
+                      <input
+                        type="email"
+                        name="email"
+                        value={waitlistEmail}
+                        onChange={(e) => setWaitlistEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        required
+                        className="flex-1 px-4 py-3 border-2 border-primary/20 rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!waitlistEmail}
+                        className="bg-gradient-primary text-white font-bold text-lg px-6 py-3 rounded-xl group shadow-lg transition-all disabled:opacity-50 inline-flex items-center justify-center whitespace-nowrap hover:opacity-90"
+                      >
+                        <Mail className="mr-2 h-5 w-5" />
+                        Join Waitlist
+                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </form>
+                  </>
+                ) : (
                   <motion.div
-                    className="ml-2"
-                    animate={{ x: [0, 5, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center justify-center gap-2 text-emerald-600 font-semibold text-lg py-4"
                   >
-                    →
+                    <Check className="w-5 h-5" />
+                    You're on the list! We'll notify you at launch.
                   </motion.div>
-                </Button>
+                )}
                 
                 <p className="text-center text-sm text-muted-foreground mt-4">
-                  30-day money-back guarantee • Instant download
+                  Get early access & a launch day discount
                 </p>
               </div>
 

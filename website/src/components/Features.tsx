@@ -20,9 +20,9 @@ const Features = () => {
     },
     {
       icon: DollarSign,
-      title: "$9 Once, Not $180/Year",
-      description: "Web converters charge $15-24/month. We charge $9 once. You do the math.",
-      stat: "Save $171+",
+      title: "One Price, Not Subscriptions",
+      description: "Web converters charge monthly. Épure is a one-time purchase. Pay once, use forever.",
+      stat: "No subscriptions",
       gradient: "from-emerald-400 to-teal-500"
     },
     {
@@ -193,8 +193,8 @@ const Features = () => {
                 </tr>
                 <tr>
                   <td className="py-4 px-4 text-white/80">Price</td>
-                  <td className="py-4 px-4 text-center text-red-400">$15-24/month ($180-288/yr)</td>
-                  <td className="py-4 px-4 text-center text-emerald-400 font-medium">$9 once, forever</td>
+                  <td className="py-4 px-4 text-center text-red-400">$15-24/month (subscriptions)</td>
+                  <td className="py-4 px-4 text-center text-emerald-400 font-medium">One-time purchase</td>
                 </tr>
               </tbody>
             </table>
@@ -203,11 +203,14 @@ const Features = () => {
           {/* Bottom CTA */}
           <div className="mt-8 text-center">
             <p className="text-white/60 text-sm mb-4">
-              Join 500+ photographers and designers who made the switch
+              Join photographers and designers ready to make the switch
             </p>
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-full font-semibold hover:bg-emerald-600 transition-colors cursor-pointer">
-              Get Épure for $9
-            </div>
+            <a 
+              href="#waitlist"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-full font-semibold hover:bg-emerald-600 transition-colors cursor-pointer"
+            >
+              Join the Waitlist
+            </a>
           </div>
         </motion.div>
       </div>

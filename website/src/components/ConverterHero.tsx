@@ -1,9 +1,8 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Mail, Shield, Clock, XCircle, CheckCircle, DollarSign, Wifi, WifiOff, ShoppingCart } from 'lucide-react';
+import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Mail, Shield, Clock, XCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { CHECKOUT_URL } from '../lib/payment';
 
 interface FileWithPreview extends File {
   preview: string;
@@ -21,6 +20,8 @@ const ConverterHero = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isConverted, setIsConverted] = useState<boolean>(false);
   const [convertedFile, setConvertedFile] = useState<ConvertedFile | null>(null);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Animation variants
@@ -198,7 +199,7 @@ const ConverterHero = () => {
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
               Convert <span className="font-bold text-foreground">500 files in 2 minutes</span>. No uploads. No subscriptions. No limits.
               <br />
-              <span className="font-semibold text-primary">$9 once - works forever.</span>
+              <span className="font-semibold text-primary">The desktop converter that just works.</span>
             </p>
 
             {/* Quick Comparison Pills */}
@@ -209,15 +210,11 @@ const ConverterHero = () => {
               </div>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-sm font-medium">
                 <CheckCircle className="w-4 h-4" />
-                <span>Epure: 500+ files</span>
-              </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-50 text-red-600 text-sm">
-                <DollarSign className="w-4 h-4" />
-                <span>Web: $15/month</span>
+                <span>Épure: 500+ files</span>
               </div>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-sm font-medium">
                 <CheckCircle className="w-4 h-4" />
-                <span>Epure: $9 forever</span>
+                <span>100% offline & private</span>
               </div>
             </div>
           </motion.div>
@@ -553,7 +550,7 @@ const ConverterHero = () => {
               </motion.div>
             )}
 
-            {/* Desktop App CTA */}
+            {/* Waitlist CTA */}
             <Card className="max-w-3xl mx-auto p-8 bg-gradient-to-br from-foreground via-foreground to-foreground/95 text-white shadow-2xl">
               <div className="text-center">
                 <motion.div
@@ -562,67 +559,75 @@ const ConverterHero = () => {
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-sm font-semibold mb-4"
                 >
                   <Zap className="w-4 h-4" />
-                  Ready to Download
+                  Launching Soon
                 </motion.div>
                 
                 <h2 className="text-2xl md:text-3xl font-bold mb-3">
                   Stop wasting time with web converters
                 </h2>
                 <p className="text-white/70 mb-6 max-w-lg mx-auto">
-                  Get the full desktop app: batch processing for 500+ files, HEIC support, 
-                  20+ formats, and works completely offline. <span className="text-white font-semibold">One price, forever.</span>
+                  The full desktop app is almost ready: batch processing for 500+ files, HEIC support, 
+                  20+ formats, and works completely offline. <span className="text-white font-semibold">Join the waitlist to get early access.</span>
                 </p>
 
-                {/* Comparison Mini Table */}
-                <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-6 text-sm">
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="text-white/50 text-xs mb-2">Web Converters</div>
-                    <div className="text-white/80">$15-24/month</div>
-                    <div className="text-white/50 text-xs">= $180-288/year</div>
-                  </div>
-                  <div className="bg-emerald-500/20 rounded-xl p-4 border border-emerald-400/30">
-                    <div className="text-emerald-300 text-xs mb-2">Epure</div>
-                    <div className="text-white font-bold">$9 once</div>
-                    <div className="text-emerald-300 text-xs">Forever yours</div>
-                  </div>
-                </div>
-
                 <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
-                  <Button
-                    onClick={() => window.open(CHECKOUT_URL, '_blank')}
-                    className="w-full bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg py-6 rounded-xl group shadow-lg shadow-emerald-500/25"
-                  >
-                    <ShoppingCart className="mr-2 h-5 w-5" />
-                    Get Épure for $9
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
+                  {!isWaitlistSubmitted ? (
+                    <>
+                      <iframe name="loops-frame-hero" style={{ display: 'none' }} />
+                      <form 
+                        action="https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol"
+                        method="POST"
+                        target="loops-frame-hero"
+                        className="flex flex-col sm:flex-row gap-3 w-full"
+                        onSubmit={() => {
+                          setTimeout(() => setIsWaitlistSubmitted(true), 1000);
+                        }}
+                      >
+                        <input
+                          type="email"
+                          name="email"
+                          value={waitlistEmail}
+                          onChange={(e) => setWaitlistEmail(e.target.value)}
+                          placeholder="Enter your email"
+                          required
+                          className="flex-1 px-4 py-3 border-2 border-white/20 rounded-xl bg-white/10 text-white placeholder:text-white/50 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-200"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!waitlistEmail}
+                          className="bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg px-6 py-3 rounded-xl group shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50 inline-flex items-center justify-center"
+                        >
+                          <Mail className="mr-2 h-5 w-5" />
+                          Join Waitlist
+                          <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      </form>
+                    </>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex items-center gap-2 text-emerald-400 font-semibold text-lg py-4"
+                    >
+                      <Check className="w-5 h-5" />
+                      You're on the list! We'll notify you when it's ready.
+                    </motion.div>
+                  )}
                   
                   <div className="flex items-center gap-4 text-xs text-white/50">
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-400" />
-                      Instant download
+                      Early access
                     </span>
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-400" />
-                      License key included
+                      Launch day discount
                     </span>
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-400" />
-                      Lifetime updates
+                      No spam, ever
                     </span>
                   </div>
-                </div>
-
-                <p className="text-xs text-white/50 mt-4">
-                  30-day money-back guarantee. No subscriptions, ever.
-                </p>
-
-                {/* First-launch instructions for Mac users */}
-                <div className="mt-6 pt-4 border-t border-white/10">
-                  <p className="text-xs text-white/40">
-                    <span className="font-medium text-white/60">First time opening on Mac?</span>{' '}
-                    Right-click the app → Open. This is normal for indie Mac apps not from the App Store.
-                  </p>
                 </div>
               </div>
             </Card>

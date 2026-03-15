@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, ArrowRight, Check, Zap, FileImage, Volume2, FileText, ShoppingCart, Shield } from 'lucide-react';
-import { Button } from './ui/button';
+import { Mail, ArrowRight, Check, Zap, FileImage, Volume2, FileText, Shield } from 'lucide-react';
 import { Card } from './ui/card';
-import { CHECKOUT_URL } from '../lib/payment';
 
 const WaitlistCTA = () => {
   const [email, setEmail] = useState('');
@@ -72,7 +70,7 @@ const WaitlistCTA = () => {
           <motion.div variants={itemVariants} className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold mb-6">
               <Zap className="w-4 h-4" />
-              Available Now
+              Launching Soon
             </div>
             
             <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
@@ -80,8 +78,8 @@ const WaitlistCTA = () => {
             </h2>
             
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Images today, audio and documents coming soon. 
-              Buy once and get every future feature included, forever.
+              Images, audio, and documents — all converted locally on your machine. 
+              Join the waitlist to get early access and a launch day discount.
             </p>
           </motion.div>
 
@@ -138,49 +136,20 @@ const WaitlistCTA = () => {
             ))}
           </motion.div>
 
-          {/* Buy CTA */}
+          {/* Waitlist CTA */}
           <motion.div variants={itemVariants}>
             <Card className="p-8 md:p-10 bg-gradient-to-br from-foreground via-foreground to-foreground/95 text-white shadow-2xl">
               <div className="text-center max-w-xl mx-auto">
                 <h3 className="text-2xl md:text-3xl font-bold mb-3">
-                  Ready to ditch web converters?
+                  Be the first to get Épure
                 </h3>
                 <p className="text-white/70 mb-6">
-                  Get Épure today. One payment, no subscriptions, works forever.
-                  All future features included with your purchase.
+                  Join the waitlist for early access and an exclusive launch day discount.
+                  One app, all your conversions, completely offline.
                 </p>
 
-                <Button
-                  onClick={() => window.open(CHECKOUT_URL, '_blank')}
-                  className="w-full max-w-sm mx-auto bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg py-6 rounded-xl group shadow-lg shadow-emerald-500/25"
-                >
-                  <ShoppingCart className="mr-2 h-5 w-5" />
-                  Get Épure for $9
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-
-                <div className="flex items-center justify-center gap-4 text-xs text-white/50 mt-4">
-                  <span className="flex items-center gap-1">
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    Instant download
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Shield className="w-3 h-3 text-emerald-400" />
-                    30-day money back
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    Lifetime updates
-                  </span>
-                </div>
-
-                {/* Email signup as secondary */}
-                <div className="mt-8 pt-6 border-t border-white/10">
-                  <p className="text-white/50 text-sm mb-3">
-                    Not ready to buy? Get notified about updates:
-                  </p>
-                  {!isSubmitted ? (
-                    <>
+                {!isSubmitted ? (
+                  <>
                     <iframe name="loops-frame-cta" style={{ display: 'none' }} />
                     <form 
                       action="https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol"
@@ -198,28 +167,43 @@ const WaitlistCTA = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter your email"
                         required
-                        className="flex-1 px-4 py-2.5 border-2 border-white/20 rounded-xl bg-white/10 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 text-sm"
+                        className="flex-1 px-4 py-3 border-2 border-white/20 rounded-xl bg-white/10 text-white placeholder:text-white/50 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-200"
                       />
                       <button
                         type="submit"
                         disabled={!email}
-                        className="inline-flex items-center justify-center bg-white/10 border border-white/20 text-white hover:bg-white/20 font-medium px-4 py-2.5 rounded-xl group whitespace-nowrap transition-all disabled:opacity-50 text-sm"
+                        className="bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg px-6 py-3 rounded-xl group shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50 inline-flex items-center justify-center whitespace-nowrap"
                       >
-                        <Mail className="mr-2 h-3 w-3" />
-                        Subscribe
+                        <Mail className="mr-2 h-5 w-5" />
+                        Join Waitlist
+                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                       </button>
                     </form>
-                    </>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex items-center justify-center gap-2 text-emerald-400 font-medium py-2"
-                    >
-                      <Check className="w-4 h-4" />
-                      <span className="text-sm">You're subscribed! We'll keep you posted.</span>
-                    </motion.div>
-                  )}
+                  </>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center justify-center gap-2 text-emerald-400 font-semibold text-lg py-4"
+                  >
+                    <Check className="w-5 h-5" />
+                    You're on the list! We'll notify you when it's ready.
+                  </motion.div>
+                )}
+
+                <div className="flex items-center justify-center gap-4 text-xs text-white/50 mt-4">
+                  <span className="flex items-center gap-1">
+                    <Check className="w-3 h-3 text-emerald-400" />
+                    Early access
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Shield className="w-3 h-3 text-emerald-400" />
+                    Launch day discount
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Check className="w-3 h-3 text-emerald-400" />
+                    No spam, ever
+                  </span>
                 </div>
               </div>
             </Card>
@@ -231,8 +215,8 @@ const WaitlistCTA = () => {
             className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center"
           >
             {[
-              { emoji: '⚡', text: 'Instant download' },
-              { emoji: '💰', text: '$9 once, forever' },
+              { emoji: '⚡', text: 'Lightning fast' },
+              { emoji: '📦', text: 'Batch 500+ files' },
               { emoji: '🎁', text: 'Free updates forever' },
               { emoji: '🔒', text: '100% private & offline' }
             ].map((benefit, index) => (
