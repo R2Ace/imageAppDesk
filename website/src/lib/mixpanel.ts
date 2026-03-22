@@ -15,11 +15,9 @@ export const initMixpanel = () => {
   `;
   document.head.appendChild(script);
 
-  // Initialize with token
+  // Initialize with project token (public client-side identifier, not a secret)
   if (window.mixpanel) {
-    const token = import.meta.env.VITE_MIXPANEL_TOKEN || '';
-    if (!token) return;
-    window.mixpanel.init(token, {
+    window.mixpanel.init("464423c2d50d3113073d05faa473d76f", {
       debug: false,
       track_pageview: true,
       persistence: "localStorage"
