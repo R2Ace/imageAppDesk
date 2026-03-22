@@ -100,7 +100,7 @@ const analytics = new Analytics();
 
 // Initialize with token from environment variable (only if available)
 try {
-  const mixpanelToken = process.env.MIXPANEL_TOKEN || '464423c2d50d3113073d05faa473d76f';
+  const mixpanelToken = process.env.MIXPANEL_TOKEN || '';
   analytics.init(mixpanelToken);
 } catch (error) {
   console.log('Analytics: Initialization failed, analytics disabled:', error.message);

@@ -4,7 +4,7 @@ const { init } = require('@sentry/electron');
 const initSentry = () => {
   init({
     // Your actual Sentry DSN from sentry.io
-    dsn: process.env.SENTRY_DSN || 'https://01b12cfe719611f08c5d727433647405@o4509788717514752.ingest.us.sentry.io/4509788718891008',
+    dsn: process.env.SENTRY_DSN || '',
     
     // App version for tracking
     release: require('../package.json').version,

@@ -17,7 +17,9 @@ export const initMixpanel = () => {
 
   // Initialize with token
   if (window.mixpanel) {
-    window.mixpanel.init("464423c2d50d3113073d05faa473d76f", {
+    const token = import.meta.env.VITE_MIXPANEL_TOKEN || '';
+    if (!token) return;
+    window.mixpanel.init(token, {
       debug: false,
       track_pageview: true,
       persistence: "localStorage"
