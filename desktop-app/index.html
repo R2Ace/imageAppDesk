@@ -63,141 +63,161 @@
         <!-- Main Container -->
         <div class="app-container">
             <main class="main-content">
-                <!-- Drop Zone Card -->
-                <div class="drop-zone-card" id="dropZone">
-                    <div class="drop-zone-content">
-                        <div class="upload-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="17 8 12 3 7 8"/>
-                                <line x1="12" y1="3" x2="12" y2="15"/>
-                            </svg>
-                        </div>
-                        <h3>Drop files to convert</h3>
-                        <p>or <span class="link-text">browse files</span></p>
-                        <div class="supported-formats">
-                            <span>JPG</span>
-                            <span>PNG</span>
-                            <span>WebP</span>
-                            <span>HEIC</span>
-                            <span>TIFF</span>
-                            <span>AVIF</span>
-                        </div>
-                    </div>
-                    <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                <!-- Feature Badges -->
+                <div class="feature-badges">
+                    <span class="feature-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        3x Faster
+                    </span>
+                    <span class="feature-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Zero Uploads
+                    </span>
                 </div>
 
-                <!-- File Preview Stage -->
-                <div class="file-preview-stage" id="filePreviewStage" style="display: none;">
-                    <div class="preview-card">
-                        <div class="preview-header">
-                            <h3>Convert <span id="conversionCount">0</span> files</h3>
-                            <p class="preview-subtitle">Choose output format and quality</p>
+                <!-- 3-Step Converter Flow -->
+                <div class="converter-flow">
+                    <!-- Step 1: Upload -->
+                    <div class="step-column" id="stepUpload">
+                        <div class="step-badge">
+                            <span class="step-number">1</span>
+                            Upload
                         </div>
-                        <div class="conversion-list" id="conversionList"></div>
-                        <div class="global-settings">
-                            <h4>Apply to All</h4>
-                            <div class="global-controls">
-                                <div class="format-selector-global">
-                                    <label>Format:</label>
-                                    <select id="globalFormat">
-                                        <option value="">Choose...</option>
-                                        <option value="jpeg">JPEG</option>
-                                        <option value="png">PNG</option>
-                                        <option value="webp">WebP</option>
-                                        <option value="avif">AVIF</option>
-                                    </select>
+                        <div class="step-card drop-target" id="dropZone">
+                            <div class="step-card-idle" id="uploadIdle">
+                                <div class="step-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
                                 </div>
-                                <div class="quality-selector-global">
-                                    <label>Quality:</label>
-                                    <input type="range" id="globalQuality" min="1" max="100" value="80">
-                                    <span id="globalQualityValue">80%</span>
+                                <p class="step-card-title">Drop files here</p>
+                                <p class="step-card-sub">or <span class="link-text" id="browseLink">click to browse</span></p>
+                                <div class="supported-formats">
+                                    <span>JPG</span>
+                                    <span>PNG</span>
+                                    <span>WebP</span>
                                 </div>
-                                <button class="secondary-btn sm" id="applyToAll">Apply</button>
+                            </div>
+                            <div class="step-card-active" id="uploadActive" style="display:none;">
+                                <div class="file-thumb" id="fileThumb"></div>
+                                <p class="file-name" id="fileName"></p>
+                                <p class="file-size" id="fileSize"></p>
+                                <div class="file-list-scroll" id="fileListScroll"></div>
+                                <button class="secondary-btn sm" id="changeFileBtn">Change files</button>
                             </div>
                         </div>
-                        <div class="preview-actions">
-                            <button class="secondary-btn" id="cancelProcessing">Cancel</button>
-                            <button class="primary-btn" id="startProcessing">
+                        <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                    </div>
+
+                    <!-- Arrow 1 -->
+                    <div class="step-arrow">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </div>
+
+                    <!-- Step 2: Convert -->
+                    <div class="step-column" id="stepConvert">
+                        <div class="step-badge badge-accent">
+                            <span class="step-number">2</span>
+                            Convert
+                        </div>
+                        <div class="step-card">
+                            <p class="step-card-label">Output Format</p>
+                            <select class="flow-format-select" id="flowFormatSelect" disabled>
+                                <option value="">Select format...</option>
+                                <option value="jpeg">JPEG</option>
+                                <option value="png">PNG</option>
+                                <option value="webp">WebP</option>
+                                <option value="avif">AVIF</option>
+                            </select>
+                            <div class="quality-row" id="flowQualityRow">
+                                <label>Quality</label>
+                                <input type="range" id="flowQuality" min="1" max="100" value="80">
+                                <span id="flowQualityValue">80%</span>
+                            </div>
+                            <button class="convert-btn" id="convertBtn" disabled>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="13 17 18 12 13 7"/>
-                                    <polyline points="6 17 11 12 6 7"/>
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                                 </svg>
-                                Convert Files
+                                <span id="convertBtnText">Convert Now</span>
                             </button>
                         </div>
                     </div>
-                </div>
 
-                <!-- Processing State -->
-                <div class="processing-state" id="processingState" style="display: none;">
-                    <div class="processing-card">
-                        <div class="processing-header">
-                            <h3>Converting...</h3>
-                            <div class="processing-count">
-                                <span id="processedCount">0</span> / <span id="totalCount">0</span>
+                    <!-- Arrow 2 -->
+                    <div class="step-arrow">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </div>
+
+                    <!-- Step 3: Download -->
+                    <div class="step-column" id="stepDownload">
+                        <div class="step-badge badge-success">
+                            <span class="step-number">3</span>
+                            Download
+                        </div>
+                        <div class="step-card">
+                            <div class="step-card-idle" id="downloadIdle">
+                                <div class="step-icon muted">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                </div>
+                                <p class="step-card-sub">Your converted file will appear here</p>
+                            </div>
+                            <div class="step-card-active" id="downloadActive" style="display:none;">
+                                <div class="result-icon" id="resultIcon">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <p class="file-name" id="resultName"></p>
+                                <p class="result-stats" id="resultStats"></p>
+                                <div class="result-list-scroll" id="resultListScroll"></div>
+                                <div class="download-actions">
+                                    <button class="primary-btn sm" id="openFolderBtn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                                        </svg>
+                                        Open Folder
+                                    </button>
+                                    <button class="secondary-btn sm" id="newConversionBtn">New</button>
+                                </div>
                             </div>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progressFill"></div>
-                        </div>
-                        <div class="current-file">
-                            <span id="currentFile">Preparing...</span>
-                        </div>
                     </div>
                 </div>
 
-                <!-- Results Dashboard -->
-                <div class="results-dashboard" id="resultsDashboard" style="display: none;">
-                    <div class="dashboard-header">
-                        <h3>Done!</h3>
-                        <button class="open-folder-btn" id="openFolderBtn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                            </svg>
-                            Open Folder
-                        </button>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-card success">
-                            <div class="stat-value" id="successCount">0</div>
-                            <div class="stat-label">Converted</div>
-                        </div>
-                        <div class="stat-card space">
-                            <div class="stat-value" id="spaceSaved">0 MB</div>
-                            <div class="stat-label">Saved</div>
-                        </div>
-                        <div class="stat-card percentage">
-                            <div class="stat-value" id="avgReduction">0%</div>
-                            <div class="stat-label">Reduction</div>
-                        </div>
-                        <div class="stat-card time">
-                            <div class="stat-value" id="processTime">0s</div>
-                            <div class="stat-label">Time</div>
-                        </div>
-                    </div>
-                    <div class="results-list" id="resultsList"></div>
-                    <div class="dashboard-actions">
-                        <button class="secondary-btn" id="processMoreBtn">Add More</button>
-                        <button class="primary-btn" id="newConversionBtn">New Conversion</button>
-                    </div>
+                <!-- Works Offline Badge -->
+                <div class="offline-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                        <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                        <line x1="12" y1="20" x2="12.01" y2="20"/>
+                    </svg>
+                    Works Offline
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- Hidden Quick Settings (renderer.js compat) -->
+    <!-- Hidden compat elements for renderer.js settings -->
     <div style="display:none;">
-        <div class="format-selector">
-            <button class="format-btn active" data-format="jpeg">JPG</button>
-            <button class="format-btn" data-format="png">PNG</button>
-            <button class="format-btn" data-format="webp">WebP</button>
-        </div>
-        <div class="size-selector">
-            <button class="size-btn" data-preset="1080p">1080p</button>
-            <button class="size-btn" data-preset="720p">720p</button>
-            <button class="size-btn active" data-preset="custom">Custom</button>
-        </div>
         <div id="customSizeGroup">
             <input type="number" id="customWidth" value="1920">
             <input type="number" id="customHeight" value="1080">
@@ -205,45 +225,6 @@
         <input type="range" id="qualitySlider" min="0" max="100" value="80">
         <span id="qualityValue">80%</span>
         <button id="settingsBtn"></button>
-    </div>
-
-    <!-- Results Popup Modal -->
-    <div class="results-popup-overlay" id="resultsPopup" style="display: none;">
-        <div class="results-popup-modal">
-            <div class="results-popup-header">
-                <div class="success-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                </div>
-                <h2>Conversion Complete</h2>
-                <p>Your files have been processed</p>
-            </div>
-            <div class="results-popup-stats">
-                <div class="popup-stat-card">
-                    <div class="popup-stat-value" id="popupSuccessCount">0</div>
-                    <div class="popup-stat-label">Processed</div>
-                </div>
-                <div class="popup-stat-card">
-                    <div class="popup-stat-value" id="popupSpaceSaved">0 MB</div>
-                    <div class="popup-stat-label">Saved</div>
-                </div>
-                <div class="popup-stat-card">
-                    <div class="popup-stat-value" id="popupAvgReduction">0%</div>
-                    <div class="popup-stat-label">Reduction</div>
-                </div>
-            </div>
-            <div class="results-popup-actions">
-                <button class="secondary-btn" id="viewDetailsBtn">Details</button>
-                <button class="primary-btn" id="openFolderPopupBtn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    Open Folder
-                </button>
-            </div>
-            <button class="close-popup" id="closeResultsPopupBtn">&times;</button>
-        </div>
     </div>
 
     <!-- Settings Modal -->
@@ -303,7 +284,8 @@
                         </label>
                     </div>
                 </div>
-                <div class="settings-section">
+                <!-- License section hidden for free launch; re-enable for Pro tier -->
+                <div class="settings-section" style="display:none;">
                     <h3>License</h3>
                     <div class="setting-row">
                         <label>Status</label>
@@ -321,8 +303,13 @@
                     </div>
                     <div class="setting-row" style="display:flex;gap:8px;flex-wrap:wrap;">
                         <button class="secondary-btn sm" id="purchaseLicense">Purchase ($9)</button>
-                        <button class="secondary-btn sm" id="contactSupport">Support</button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Help</h3>
+                    <div class="setting-row" style="display:flex;gap:8px;flex-wrap:wrap;">
                         <button class="secondary-btn sm" id="showHelpTour">App Tour</button>
+                        <button class="secondary-btn sm" id="contactSupport">Support</button>
                     </div>
                 </div>
             </div>

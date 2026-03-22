@@ -5,7 +5,7 @@ import Features from './components/Features'
 import Blog from './components/Blog'
 import WaitlistCTA from './components/WaitlistCTA'
 import Footer from './components/Footer'
-import StickyWaitlistBar from './components/StickyWaitlistBar'
+import StickyDownloadBar from './components/StickyDownloadBar'
 
 import { initMixpanel, trackEvent } from './lib/mixpanel'
 
@@ -16,15 +16,15 @@ function App() {
     
     // Track page view
     trackEvent('React Landing Page Visit', {
-      page: 'Waitlist Landing',
-      design_version: 'competitor_focused_v2',
+      page: 'Download Landing',
+      design_version: 'free_launch_v1',
       timestamp: new Date().toISOString()
     })
   }, [])
 
   return (
     <div className="min-h-screen bg-background">
-      <StickyWaitlistBar />
+      <StickyDownloadBar />
       
       <main>
         <ConverterHero />

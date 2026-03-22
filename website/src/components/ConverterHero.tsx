@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Mail, Shield, Clock, XCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react';
+import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Shield, Clock, XCircle, CheckCircle, WifiOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 
@@ -20,8 +20,6 @@ const ConverterHero = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isConverted, setIsConverted] = useState<boolean>(false);
   const [convertedFile, setConvertedFile] = useState<ConvertedFile | null>(null);
-  const [waitlistEmail, setWaitlistEmail] = useState('');
-  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Animation variants
@@ -530,7 +528,7 @@ const ConverterHero = () => {
             </motion.div>
           </motion.div>
 
-          {/* Convert Another + Waitlist CTA */}
+            {/* Convert Another + Download CTA */}
           <motion.div variants={itemVariants} className="text-center">
             {isConverted && (
               <motion.div 
@@ -550,82 +548,57 @@ const ConverterHero = () => {
               </motion.div>
             )}
 
-            {/* Waitlist CTA */}
+            {/* Download CTA */}
             <Card className="max-w-3xl mx-auto p-8 bg-gradient-to-br from-foreground via-foreground to-foreground/95 text-white shadow-2xl">
               <div className="text-center">
                 <motion.div
                   animate={{ y: [0, -5, 0] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-sm font-semibold mb-4"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold mb-4"
                 >
                   <Zap className="w-4 h-4" />
-                  Launching Soon
+                  Available Now — Free
                 </motion.div>
                 
                 <h2 className="text-2xl md:text-3xl font-bold mb-3">
                   Stop wasting time with web converters
                 </h2>
                 <p className="text-white/70 mb-6 max-w-lg mx-auto">
-                  The full desktop app is almost ready: batch processing for 500+ files, HEIC support, 
-                  20+ formats, and works completely offline. <span className="text-white font-semibold">Join the waitlist to get early access.</span>
+                  Get the full desktop app: batch processing for 500+ files, HEIC support, 
+                  20+ formats, and works completely offline. <span className="text-white font-semibold">Download free for Mac.</span>
                 </p>
 
                 <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
-                  {!isWaitlistSubmitted ? (
-                    <>
-                      <iframe name="loops-frame-hero" style={{ display: 'none' }} />
-                      <form 
-                        action="https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol"
-                        method="POST"
-                        target="loops-frame-hero"
-                        className="flex flex-col sm:flex-row gap-3 w-full"
-                        onSubmit={() => {
-                          setTimeout(() => setIsWaitlistSubmitted(true), 1000);
-                        }}
-                      >
-                        <input
-                          type="email"
-                          name="email"
-                          value={waitlistEmail}
-                          onChange={(e) => setWaitlistEmail(e.target.value)}
-                          placeholder="Enter your email"
-                          required
-                          className="flex-1 px-4 py-3 border-2 border-white/20 rounded-xl bg-white/10 text-white placeholder:text-white/50 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-200"
-                        />
-                        <button
-                          type="submit"
-                          disabled={!waitlistEmail}
-                          className="bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg px-6 py-3 rounded-xl group shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50 inline-flex items-center justify-center"
-                        >
-                          <Mail className="mr-2 h-5 w-5" />
-                          Join Waitlist
-                          <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                        </button>
-                      </form>
-                    </>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex items-center gap-2 text-emerald-400 font-semibold text-lg py-4"
-                    >
-                      <Check className="w-5 h-5" />
-                      You're on the list! We'll notify you when it's ready.
-                    </motion.div>
-                  )}
+                  <a
+                    href="https://github.com/R2Ace/imageAppDesk/releases/download/v1.0.0-free/Epure-1.0.0-arm64.dmg"
+                    onClick={() => {
+                      if (typeof window !== 'undefined' && (window as any).mixpanel) {
+                        (window as any).mixpanel.track('Download Button Clicked', {
+                          source: 'Hero CTA',
+                          price: 0,
+                          platform: 'mac'
+                        });
+                      }
+                    }}
+                    className="bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg px-8 py-4 rounded-xl group shadow-lg shadow-emerald-500/25 transition-all inline-flex items-center justify-center"
+                  >
+                    <Download className="mr-2 h-5 w-5" />
+                    Download Free for Mac
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </a>
                   
                   <div className="flex items-center gap-4 text-xs text-white/50">
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-400" />
-                      Early access
+                      100% free
                     </span>
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-400" />
-                      Launch day discount
+                      No account required
                     </span>
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-400" />
-                      No spam, ever
+                      Works offline
                     </span>
                   </div>
                 </div>

@@ -1,15 +1,12 @@
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Mail, ArrowRight } from 'lucide-react'
-import { Button } from './ui/button'
+import { Check, Download, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardHeader } from './ui/card'
 import { fadeInUp } from '../lib/utils'
 import EmailSignup from './EmailSignup'
 
-const Pricing = () => {
-  const [waitlistEmail, setWaitlistEmail] = useState('')
-  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false)
+const DOWNLOAD_URL = 'https://github.com/R2Ace/imageAppDesk/releases/download/v1.0.0-free/Epure-1.0.0-arm64.dmg'
 
+const Pricing = () => {
   const features = [
     "Unlimited file processing",
     "All formats (HEIC, WebP, TIFF, etc.)",
@@ -17,8 +14,8 @@ const Pricing = () => {
     "Smart compression algorithms",
     "Metadata preservation options",
     "Works completely offline",
-    "Lifetime updates & support",
-    "30-day money-back guarantee"
+    "Free lifetime updates",
+    "No account required"
   ]
 
   const futureFeatures = [
@@ -50,10 +47,10 @@ const Pricing = () => {
           viewport={{ once: true }}
         >
           <h2 className="text-4xl lg:text-6xl font-bold text-foreground mb-4">
-            Simple, Fair Pricing
+            Completely Free
           </h2>
           <p className="text-xl text-muted-foreground">
-            One purchase, lifetime access. No subscriptions, no surprises.
+            No subscriptions, no sign-ups, no surprises. Just download and go.
           </p>
         </motion.div>
 
@@ -68,18 +65,18 @@ const Pricing = () => {
             {/* Badge */}
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
               <div className="bg-gradient-primary text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                🚀 Launching Soon
+                100% Free
               </div>
             </div>
 
             <CardHeader className="text-center pt-12 pb-8">
               <div className="mb-4">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-4xl font-bold text-foreground">One-Time Purchase</span>
+                  <span className="text-4xl font-bold text-foreground">$0</span>
                 </div>
-                <p className="text-xl text-muted-foreground">Pay once, use forever</p>
+                <p className="text-xl text-muted-foreground">Free forever, no strings attached</p>
                 <div className="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
-                  <span>Waitlist members get an exclusive launch discount</span>
+                  <span>Download now and start converting</span>
                 </div>
               </div>
             </CardHeader>
@@ -102,51 +99,17 @@ const Pricing = () => {
               </ul>
 
               <div className="pt-6">
-                {!isWaitlistSubmitted ? (
-                  <>
-                    <iframe name="loops-frame-pricing" style={{ display: 'none' }} />
-                    <form 
-                      action="https://app.loops.so/api/newsletter-form/cmjdc4wv302yk0iyy9lc0nbol"
-                      method="POST"
-                      target="loops-frame-pricing"
-                      className="flex flex-col sm:flex-row gap-3"
-                      onSubmit={() => {
-                        setTimeout(() => setIsWaitlistSubmitted(true), 1000);
-                      }}
-                    >
-                      <input
-                        type="email"
-                        name="email"
-                        value={waitlistEmail}
-                        onChange={(e) => setWaitlistEmail(e.target.value)}
-                        placeholder="Enter your email"
-                        required
-                        className="flex-1 px-4 py-3 border-2 border-primary/20 rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
-                      />
-                      <button
-                        type="submit"
-                        disabled={!waitlistEmail}
-                        className="bg-gradient-primary text-white font-bold text-lg px-6 py-3 rounded-xl group shadow-lg transition-all disabled:opacity-50 inline-flex items-center justify-center whitespace-nowrap hover:opacity-90"
-                      >
-                        <Mail className="mr-2 h-5 w-5" />
-                        Join Waitlist
-                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    </form>
-                  </>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center justify-center gap-2 text-emerald-600 font-semibold text-lg py-4"
-                  >
-                    <Check className="w-5 h-5" />
-                    You're on the list! We'll notify you at launch.
-                  </motion.div>
-                )}
+                <a
+                  href={DOWNLOAD_URL}
+                  className="bg-gradient-primary text-white font-bold text-lg px-6 py-3 rounded-xl group shadow-lg transition-all inline-flex items-center justify-center whitespace-nowrap hover:opacity-90 w-full"
+                >
+                  <Download className="mr-2 h-5 w-5" />
+                  Download Free for Mac
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </a>
                 
                 <p className="text-center text-sm text-muted-foreground mt-4">
-                  Get early access & a launch day discount
+                  macOS 10.15+ &middot; Apple Silicon
                 </p>
               </div>
 
@@ -157,7 +120,7 @@ const Pricing = () => {
                   <span>•</span>
                   <span>Complete privacy</span>
                   <span>•</span>
-                  <span>One-time purchase</span>
+                  <span>100% free</span>
                 </div>
               </div>
             </CardContent>
@@ -210,7 +173,7 @@ const Pricing = () => {
           <div className="text-center mt-8">
             <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-primary text-white rounded-full text-lg font-bold shadow-lg">
               <span>🚀</span>
-              <span>All future features included with your purchase!</span>
+              <span>All future features included — free forever</span>
             </div>
           </div>
         </motion.div>

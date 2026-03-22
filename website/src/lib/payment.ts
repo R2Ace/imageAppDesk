@@ -1,20 +1,21 @@
-// Payment processing utilities - Lemon Squeezy
+// Download utilities (payment disabled for free launch — infrastructure kept for future Pro tier)
 
-export const CHECKOUT_URL = 'https://epure.lemonsqueezy.com/checkout/buy/c8f3c0d4-1450-426a-9a86-77963db04332';
+// Lemon Squeezy checkout URL preserved for future Pro tier
+// export const CHECKOUT_URL = 'https://epure.lemonsqueezy.com/checkout/buy/c8f3c0d4-1450-426a-9a86-77963db04332';
 
-export const initiatePayment = () => {
-  // Track payment attempt
+export const DOWNLOAD_URL = 'https://github.com/R2Ace/imageAppDesk/releases/download/v1.0.0-free/Epure-1.0.0-arm64.dmg';
+
+export const initiateDownload = () => {
   import('./mixpanel').then(({ trackEvent }) => {
-    trackEvent('Payment Initiated', {
+    trackEvent('Download Initiated', {
       product: 'Épure - File Converter',
-      amount: 9,
+      amount: 0,
       source: 'website',
-      provider: 'lemonsqueezy'
+      platform: 'mac'
     });
   });
 
-  // Open Lemon Squeezy checkout
-  window.open(CHECKOUT_URL, '_blank');
+  window.open(DOWNLOAD_URL, '_blank');
 };
 
-export default { CHECKOUT_URL, initiatePayment };
+export default { DOWNLOAD_URL, initiateDownload };

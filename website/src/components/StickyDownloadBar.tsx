@@ -1,30 +1,15 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Download, Sparkles, User } from 'lucide-react'
+import { Download, Sparkles } from 'lucide-react'
 import { Button } from './ui/button'
-import UserAccount from './UserAccount'
+
+const DOWNLOAD_URL = 'https://github.com/R2Ace/imageAppDesk/releases/download/v1.0.0-free/Epure-1.0.0-arm64.dmg'
 
 const StickyDownloadBar = () => {
   const [isVisible, setIsVisible] = useState(false)
-  const [showUserAccount, setShowUserAccount] = useState(false)
-  
-  // Detect user's operating system
-  const getUserOS = () => {
-    if (typeof window === 'undefined') return 'mac'
-    const userAgent = window.navigator.userAgent.toLowerCase()
-    if (userAgent.includes('win')) return 'windows'
-    return 'mac'
-  }
-  
-  const [userOS, setUserOS] = useState('mac')
-  
-  useEffect(() => {
-    setUserOS(getUserOS())
-  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
-      // Show the bar after scrolling past the hero section (roughly 100vh)
       const heroHeight = window.innerHeight
       const scrollY = window.scrollY
       setIsVisible(scrollY > heroHeight)
@@ -34,27 +19,16 @@ const StickyDownloadBar = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const handleDownload = async () => {
-    // Track download attempt from sticky bar
+  const handleDownload = () => {
     if (typeof window !== 'undefined' && (window as any).mixpanel) {
       (window as any).mixpanel.track('Download Button Clicked', {
         source: 'Sticky Bar',
-        price: 9,
-        platform: userOS
+        price: 0,
+        platform: 'mac'
       })
     }
-    
-    // Initiate payment flow
-    try {
-      const { initiatePayment } = await import('../lib/payment')
-      await initiatePayment()
-    } catch (error) {
-      console.error('Payment failed:', error)
-      alert('Payment system temporarily unavailable. Please contact r2thedev@gmail.com')
-    }
+    window.open(DOWNLOAD_URL, '_blank')
   }
-
-
 
   return (
     <AnimatePresence>
@@ -68,7 +42,6 @@ const StickyDownloadBar = () => {
         >
           <div className="container mx-auto px-6 py-3">
             <div className="flex items-center justify-between">
-              {/* Left side - App info */}
               <div className="flex items-center gap-4">
                 <motion.div
                   className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-lg"
@@ -81,12 +54,11 @@ const StickyDownloadBar = () => {
                 <div>
                   <h3 className="font-bold text-foreground text-lg">Épure</h3>
                   <p className="text-sm text-muted-foreground hidden sm:block">
-                    🔥 <span className="line-through">$10/month</span> → <span className="text-green-600 font-semibold">$9 forever</span> 🔥
+                    Free file converter for Mac
                   </p>
                 </div>
               </div>
               
-              {/* Right side - CTA */}
               <div className="flex items-center gap-2">
                 <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
@@ -99,17 +71,9 @@ const StickyDownloadBar = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                    <span>No Subscriptions</span>
+                    <span>Works Offline</span>
                   </div>
                 </div>
-                
-                <Button 
-                  onClick={() => setShowUserAccount(true)}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <User className="h-4 w-4" />
-                </Button>
                 
                 <Button 
                   onClick={handleDownload}
@@ -118,23 +82,16 @@ const StickyDownloadBar = () => {
                   className="shadow-lg hover:shadow-xl group"
                 >
                   <Download className="mr-2 h-4 w-4 group-hover:animate-bounce-subtle" />
-                  <span className="hidden sm:inline">Get for {userOS === 'windows' ? 'Windows' : 'Mac'} $9</span>
-                  <span className="sm:hidden">Get $9</span>
+                  <span className="hidden sm:inline">Download Free for Mac</span>
+                  <span className="sm:hidden">Download Free</span>
                 </Button>
               </div>
             </div>
           </div>
           
-          {/* Subtle gradient border at bottom */}
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
         </motion.div>
       )}
-      
-      {/* User Account Modal */}
-      <UserAccount 
-        isOpen={showUserAccount} 
-        onClose={() => setShowUserAccount(false)} 
-      />
     </AnimatePresence>
   )
 }
