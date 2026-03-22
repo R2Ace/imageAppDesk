@@ -1,8 +1,7 @@
 import { motion } from 'framer-motion';
 import { Download, ArrowRight, Check, Zap, FileImage, Volume2, FileText, Shield } from 'lucide-react';
 import { Card } from './ui/card';
-
-const DOWNLOAD_URL = 'https://github.com/R2Ace/imageAppDesk/releases/download/v1.0.0-free/Epure-1.0.0-arm64.dmg';
+import { triggerDownload } from '../lib/payment';
 
 const WaitlistCTA = () => {
   const upcomingFeatures = [
@@ -146,14 +145,14 @@ const WaitlistCTA = () => {
                   No sign-up required.
                 </p>
 
-                <a
-                  href={DOWNLOAD_URL}
-                  className="bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg px-8 py-4 rounded-xl group shadow-lg shadow-emerald-500/25 transition-all inline-flex items-center justify-center whitespace-nowrap"
+                <button
+                  onClick={() => triggerDownload('CTA Section')}
+                  className="bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg px-8 py-4 rounded-xl group shadow-lg shadow-emerald-500/25 transition-all inline-flex items-center justify-center whitespace-nowrap cursor-pointer"
                 >
                   <Download className="mr-2 h-5 w-5" />
                   Download Free for Mac
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </a>
+                </button>
 
                 <div className="flex items-center justify-center gap-4 text-xs text-white/50 mt-4">
                   <span className="flex items-center gap-1">

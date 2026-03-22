@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, Download, Check, FileImage, Zap, RefreshCw, ArrowRight, Shield, Clock, XCircle, CheckCircle, WifiOff } from 'lucide-react';
+import { triggerDownload } from '../lib/payment';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 
@@ -569,23 +570,14 @@ const ConverterHero = () => {
                 </p>
 
                 <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
-                  <a
-                    href="https://github.com/R2Ace/imageAppDesk/releases/download/v1.0.0-free/Epure-1.0.0-arm64.dmg"
-                    onClick={() => {
-                      if (typeof window !== 'undefined' && (window as any).mixpanel) {
-                        (window as any).mixpanel.track('Download Button Clicked', {
-                          source: 'Hero CTA',
-                          price: 0,
-                          platform: 'mac'
-                        });
-                      }
-                    }}
-                    className="bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg px-8 py-4 rounded-xl group shadow-lg shadow-emerald-500/25 transition-all inline-flex items-center justify-center"
+                  <button
+                    onClick={() => triggerDownload('Hero CTA')}
+                    className="bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-lg px-8 py-4 rounded-xl group shadow-lg shadow-emerald-500/25 transition-all inline-flex items-center justify-center cursor-pointer"
                   >
                     <Download className="mr-2 h-5 w-5" />
                     Download Free for Mac
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </a>
+                  </button>
                   
                   <div className="flex items-center gap-4 text-xs text-white/50">
                     <span className="flex items-center gap-1">

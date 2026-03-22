@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Download, Sparkles } from 'lucide-react'
 import { Button } from './ui/button'
-
-const DOWNLOAD_URL = 'https://github.com/R2Ace/imageAppDesk/releases/download/v1.0.0-free/Epure-1.0.0-arm64.dmg'
+import { triggerDownload } from '../lib/payment'
 
 const StickyDownloadBar = () => {
   const [isVisible, setIsVisible] = useState(false)
@@ -18,17 +17,6 @@ const StickyDownloadBar = () => {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  const handleDownload = () => {
-    if (typeof window !== 'undefined' && (window as any).mixpanel) {
-      (window as any).mixpanel.track('Download Button Clicked', {
-        source: 'Sticky Bar',
-        price: 0,
-        platform: 'mac'
-      })
-    }
-    window.open(DOWNLOAD_URL, '_blank')
-  }
 
   return (
     <AnimatePresence>
@@ -76,7 +64,7 @@ const StickyDownloadBar = () => {
                 </div>
                 
                 <Button 
-                  onClick={handleDownload}
+                  onClick={() => triggerDownload('Sticky Bar')}
                   variant="premium"
                   size="lg"
                   className="shadow-lg hover:shadow-xl group"

@@ -3,8 +3,7 @@ import { Check, Download, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardHeader } from './ui/card'
 import { fadeInUp } from '../lib/utils'
 import EmailSignup from './EmailSignup'
-
-const DOWNLOAD_URL = 'https://github.com/R2Ace/imageAppDesk/releases/download/v1.0.0-free/Epure-1.0.0-arm64.dmg'
+import { triggerDownload } from '../lib/payment'
 
 const Pricing = () => {
   const features = [
@@ -99,14 +98,14 @@ const Pricing = () => {
               </ul>
 
               <div className="pt-6">
-                <a
-                  href={DOWNLOAD_URL}
-                  className="bg-gradient-primary text-white font-bold text-lg px-6 py-3 rounded-xl group shadow-lg transition-all inline-flex items-center justify-center whitespace-nowrap hover:opacity-90 w-full"
+                <button
+                  onClick={() => triggerDownload('Pricing')}
+                  className="bg-gradient-primary text-white font-bold text-lg px-6 py-3 rounded-xl group shadow-lg transition-all inline-flex items-center justify-center whitespace-nowrap hover:opacity-90 w-full cursor-pointer"
                 >
                   <Download className="mr-2 h-5 w-5" />
                   Download Free for Mac
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </a>
+                </button>
                 
                 <p className="text-center text-sm text-muted-foreground mt-4">
                   macOS 10.15+ &middot; Apple Silicon
