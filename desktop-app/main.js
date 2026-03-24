@@ -1,3 +1,9 @@
+// Load Electron modules first (must be before any packages that depend on electron)
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
+let autoUpdater = { checkForUpdatesAndNotify: () => {}, on: () => {} };
+const path = require('path');
+const fs = require('fs');
+
 // Enhanced logging system
 let logFile = null;
 
@@ -65,7 +71,7 @@ if (process.env.NODE_ENV !== 'production') {
   }
 }
 
-// Initialize Sentry crash reporting first (with error handling)
+// Initialize Sentry crash reporting (with error handling)
 let initSentry;
 try {
   log.info('Loading Sentry configuration...');
@@ -88,7 +94,6 @@ try {
 } catch (error) {
   log.error('Analytics initialization failed:', error.message);
   log.error('Analytics error stack:', error.stack);
-  // Create a dummy analytics object
   analytics = {
     trackAppLaunched: () => { log.debug('Analytics: trackAppLaunched called (dummy)'); },
     trackFileConverted: () => { log.debug('Analytics: trackFileConverted called (dummy)'); },
@@ -107,7 +112,6 @@ try {
 } catch (error) {
   log.error('Payment processor initialization failed:', error.message);
   log.error('Payment processor error stack:', error.stack);
-  // Create a dummy payment processor
   paymentProcessor = {
     isLicensed: () => { 
       log.debug('Payment: isLicensed called (dummy)');
@@ -131,12 +135,6 @@ try {
     }
   };
 }
-
-log.info('Loading Electron modules...');
-const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
-const { autoUpdater } = require('electron-updater');
-const path = require('path');
-const fs = require('fs');
 
 // Detect if we're in a packaged app
 const isPackaged = app.isPackaged || process.resourcesPath !== undefined || process.env.NODE_ENV === 'production';
@@ -173,9 +171,9 @@ function createWindow() {
   log.info('Creating main window...');
   try {
     mainWindow = new BrowserWindow({
-      width: 780,
-      height: 620,
-      minWidth: 580,
+      width: 880,
+      height: 600,
+      minWidth: 700,
       minHeight: 420,
       titleBarStyle: 'hiddenInset',
       backgroundColor: '#0a0a0a',
@@ -283,10 +281,6 @@ app.on('window-all-closed', () => {
 });
 
 // Add crash handlers
-app.on('renderer-process-crashed', (event, webContents, killed) => {
-  log.error('Renderer process crashed:', { killed });
-});
-
 app.on('child-process-gone', (event, details) => {
   log.error('Child process gone:', details);
 });
@@ -305,29 +299,17 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Auto-updater functionality
 app.on('ready', () => {
-  // Check for updates only in production
   if (isProduction) {
-    // Check for updates after 5 seconds to let the app load first
-    setTimeout(() => {
-      autoUpdater.checkForUpdatesAndNotify();
-    }, 5000);
-    
-    // Check for updates every hour
-    setInterval(() => {
-      autoUpdater.checkForUpdatesAndNotify();
-    }, 60 * 60 * 1000);
+    try {
+      autoUpdater = require('electron-updater').autoUpdater;
+      autoUpdater.on('update-available', () => { console.log('Update available'); });
+      autoUpdater.on('update-downloaded', () => { console.log('Update downloaded'); autoUpdater.quitAndInstall(); });
+      setTimeout(() => { autoUpdater.checkForUpdatesAndNotify(); }, 5000);
+      setInterval(() => { autoUpdater.checkForUpdatesAndNotify(); }, 60 * 60 * 1000);
+    } catch (e) {
+      log.error('Auto-updater setup failed:', e.message);
+    }
   }
-});
-
-// Auto-updater events
-autoUpdater.on('update-available', () => {
-  console.log('Update available');
-});
-
-autoUpdater.on('update-downloaded', () => {
-  console.log('Update downloaded');
-  // Silently install and restart
-  autoUpdater.quitAndInstall();
 });
 
 // IPC handlers (moved to separate function for organization)
