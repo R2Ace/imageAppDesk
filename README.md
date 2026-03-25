@@ -20,7 +20,7 @@ Everything runs locally on your machine. No files are ever uploaded anywhere.
 2. Open the DMG and drag Epure to your Applications folder
 3. Right-click the app and select **Open** (required once for unsigned apps)
 
-**Requirements:** macOS 10.15+ (Catalina or later), Apple Silicon (M1/M2/M3/M4)
+**Requirements:** macOS 11+ (Big Sur or later), Apple Silicon (M1/M2/M3/M4)
 
 ## Build from source
 
@@ -54,7 +54,7 @@ docs/              Internal documentation
 
 ## Tech stack
 
-- **Desktop:** Electron 27, Sharp (image processing), pdf-lib, mammoth
+- **Desktop:** Electron 33, Sharp (image processing), pdf-lib, mammoth
 - **Website:** React, Vite, Tailwind CSS, Framer Motion
 - **Backend:** Node.js, Express, Stripe, SQLite
 - **Monitoring:** Sentry (crash reporting), Mixpanel (anonymous analytics)
