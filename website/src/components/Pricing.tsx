@@ -112,6 +112,29 @@ const Pricing = () => {
                 </p>
               </div>
 
+              {/* Install Instructions */}
+              <div className="pt-6 border-t border-gray-200">
+                <details className="text-left">
+                  <summary className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors">
+                    Installation Instructions
+                  </summary>
+                  <ol className="mt-3 space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                    <li>Open the downloaded DMG and drag Épure to Applications</li>
+                    <li>
+                      Open <strong>Terminal</strong> and run:
+                      <code className="block mt-1 mb-1 px-3 py-2 bg-gray-900 text-green-400 rounded-lg text-xs font-mono select-all">
+                        xattr -cr /Applications/Épure.app
+                      </code>
+                    </li>
+                    <li>Open Épure from Applications — it will launch normally</li>
+                  </ol>
+                  <p className="mt-3 text-xs text-muted-foreground/70">
+                    This is required because the app is not yet signed with an Apple Developer certificate.
+                    The command simply removes the macOS quarantine flag.
+                  </p>
+                </details>
+              </div>
+
               {/* Value Proposition */}
               <div className="pt-6 border-t border-gray-200">
                 <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">

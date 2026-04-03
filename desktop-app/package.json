@@ -147,12 +147,7 @@
       "node_modules/@img/**/*",
       "node_modules/electron-store/**/*"
     ],
-    "extraFiles": [
-      {
-        "from": "build/icon.icns",
-        "to": "icon.icns"
-      }
-    ],
+    "extraFiles": [],
     "buildDependenciesFromSource": false,
     "nodeGypRebuild": false,
     "npmRebuild": true
